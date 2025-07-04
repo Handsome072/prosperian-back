@@ -1,0 +1,1891 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Supabase GraphQL API",
+    "description": "API for managing companies, establishments, officers, addresses, files, and related data using GraphQL with a Supabase backend. All operations are performed via a single GraphQL endpoint using POST requests.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4000",
+      "description": "Local GraphQL server"
+    }
+  ],
+  "paths": {
+    "/graphql": {
+      "post": {
+        "summary": "GraphQL Endpoint",
+        "description": "Single endpoint for all GraphQL queries (read operations) and mutations (create, update, delete operations). Use the 'query' field in the request body to specify the GraphQL operation and 'variables' for input parameters.",
+        "tags": ["GraphQL"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "description": "GraphQL query or mutation string (e.g., 'query { companies { id name } }' or 'mutation { createCompany(input: {...}) { id } }')"
+                  },
+                  "variables": {
+                    "type": "object",
+                    "description": "Variables for the GraphQL query or mutation (e.g., { id: 'uuid', input: {...} })"
+                  }
+                },
+                "required": ["query"],
+                "example": {
+                  "query": "query GetCompany($id: ID!) { company(id: $id) { id registration_number name } }",
+                  "variables": { "id": "123e4567-e89b-12d3-a456-426614174000" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful GraphQL response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "GraphQL response data, structure depends on the query or mutation",
+                      "example": {
+                        "company": {
+                          "id": "123e4567-e89b-12d3-a456-426614174000",
+                          "registration_number": "123456789",
+                          "name": "Example Corporation"
+                        }
+                      }
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": { "type": "string" },
+                          "locations": { "type": "array", "items": { "type": "object" } },
+                          "path": { "type": "array", "items": { "type": "string" } }
+                        }
+                      },
+                      "description": "GraphQL errors, if any"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid GraphQL query, variables, or input data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": { "type": "string", "example": "Invalid query syntax" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - Database or server failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": { "type": "string", "example": "Server error: Database connection failed" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Company": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "description": "Unique identifier (UUID)" },
+          "registration_number": { "type": "string", "description": "Company registration number (max 20 characters)" },
+          "full_registration_number": { "type": "string", "description": "Full registration number including country code (max 20 characters)" },
+          "vat_number": { "type": "string", "nullable": true, "description": "VAT number (max 50 characters)" },
+          "name": { "type": "string", "description": "Company name" },
+          "business_name": { "type": "string", "nullable": true, "description": "Business or trading name" },
+          "creation_date": { "type": "string", "format": "date", "nullable": true, "description": "Date of company creation" },
+          "status": { "type": "string", "nullable": true, "description": "Company status (e.g., active, dissolved)" },
+          "capital": { "type": "number", "nullable": true, "description": "Company capital amount" },
+          "establishments_count": { "type": "integer", "nullable": true, "description": "Number of establishments" },
+          "last_legal_update": { "type": "string", "format": "date", "nullable": true, "description": "Date of last legal update" },
+          "establishments": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Establishment" },
+            "description": "List of company establishments"
+          },
+          "officers": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Officer" },
+            "description": "List of company officers"
+          },
+          "beneficial_owners": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/BeneficialOwner" },
+            "description": "List of beneficial owners"
+          },
+          "financial_statements": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/FinancialStatement" },
+            "description": "List of financial statements"
+          },
+          "risk_assessment": { "$ref": "#/components/schemas/RiskAssessment", "nullable": true, "description": "Risk assessment for the company" },
+          "bodacc_notices": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/BodaccNotice" },
+            "description": "List of BODACC notices"
+          },
+          "legal_acts": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/LegalAct" },
+            "description": "List of legal acts"
+          },
+          "web_info": { "$ref": "#/components/schemas/WebInfo", "nullable": true, "description": "Web and social media information" },
+          "emails": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Email" },
+            "description": "List of associated email addresses"
+          }
+        },
+        "required": ["id", "registration_number", "full_registration_number", "name"]
+      },
+      "CompanyInput": {
+        "type": "object",
+        "properties": {
+          "registration_number": { "type": "string", "description": "Company registration number (max 20 characters)" },
+          "full_registration_number": { "type": "string", "description": "Full registration number including country code (max 20 characters)" },
+          "vat_number": { "type": "string", "nullable": true, "description": "VAT number (max 50 characters)" },
+          "name": { "type": "string", "description": "Company name" },
+          "business_name": { "type": "string", "nullable": true, "description": "Business or trading name" },
+          "creation_date": { "type": "string", "format": "date", "nullable": true, "description": "Date of company creation" },
+          "status": { "type": "string", "nullable": true, "description": "Company status" },
+          "capital": { "type": "number", "nullable": true, "description": "Company capital amount" },
+          "establishments_count": { "type": "integer", "nullable": true, "description": "Number of establishments" },
+          "last_legal_update": { "type": "string", "format": "date", "nullable": true, "description": "Date of last legal update" }
+        },
+        "required": ["registration_number", "full_registration_number", "name"]
+      },
+      "Establishment": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "description": "Unique identifier (UUID)" },
+          "siret": { "type": "string", "description": "SIRET number (max 20 characters)" },
+          "is_head_office": { "type": "boolean", "description": "Indicates if this is the head office" },
+          "creation_date": { "type": "string", "format": "date", "nullable": true, "description": "Date of establishment creation" },
+          "status": { "type": "string", "nullable": true, "description": "Establishment status" },
+          "address_id": { "type": "string", "format": "uuid", "nullable": true, "description": "Reference to address" },
+          "company_id": { "type": "string", "format": "uuid", "description": "Reference to company" },
+          "address": { "$ref": "#/components/schemas/Address", "nullable": true, "description": "Associated address" },
+          "company": { "$ref": "#/components/schemas/Company", "description": "Associated company" }
+        },
+        "required": ["id", "siret", "is_head_office", "company_id"]
+      },
+      "EstablishmentInput": {
+        "type": "object",
+        "properties": {
+          "siret": { "type": "string", "description": "SIRET number (max 20 characters)" },
+          "is_head_office": { "type": "boolean", "description": "Indicates if this is the head office" },
+          "creation_date": { "type": "string", "format": "date", "nullable": true, "description": "Date of establishment creation" },
+          "status": { "type": "string", "nullable": true, "description": "Establishment status" },
+          "address_id": { "type": "string", "format": "uuid", "nullable": true, "description": "Reference to address" },
+          "company_id": { "type": "string", "format": "uuid", "description": "Reference to company" }
+        },
+        "required": ["siret", "is_head_office", "company_id"]
+      },
+      "Officer": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "description": "Unique identifier (UUID)" },
+          "first_name": { "type": "string", "nullable": true, "description": "Officer's first name" },
+          "last_name": { "type": "string", "nullable": true, "description": "Officer's last name" },
+          "role": { "type": "string", "nullable": true, "description": "Officer's role (e.g., CEO, CFO)" },
+          "start_date": { "type": "string", "format": "date", "nullable": true, "description": "Start date of role" },
+          "end_date": { "type": "string", "format": "date", "nullable": true, "description": "End date of role" },
+          "registration_number": { "type": "string", "nullable": true, "description": "Registration number if officer is a company (max 20 characters)" },
+          "is_company": { "type": "boolean", "nullable": true, "description": "Indicates if the officer is a company" },
+          "company_id": { "type": "string", "format": "uuid", "description": "Reference to company" },
+          "company": { "$ref": "#/components/schemas/Company", "description": "Associated company" }
+        },
+        "required": ["id", "company_id"]
+      },
+      "OfficerInput": {
+        "type": "object",
+        "properties": {
+          "first_name": { "type": "string", "nullable": true, "description": "Officer's first name" },
+          "last_name": { "type": "string", "nullable": true, "description": "Officer's last name" },
+          "role": { "type": "string", "nullable": true, "description": "Officer's role" },
+          "start_date": { "type": "string", "format": "date", "nullable": true, "description": "Start date of role" },
+          "end_date": { "type": "string", "format": "date", "nullable": true, "description": "End date of role" },
+          "registration_number": { "type": "string", "nullable": true, "description": "Registration number if officer is a company" },
+          "is_company": { "type": "boolean", "nullable": true, "description": "Indicates if the officer is a company" },
+          "company_id": { "type": "string", "format": "uuid", "description": "Reference to company" }
+        },
+        "required": ["company_id"]
+      },
+      "BeneficialOwner": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "description": "Unique identifier (UUID)" },
+          "first_name": { "type": "string", "nullable": true, "description": "Beneficial owner's first name" },
+          "last_name": { "type": "string", "nullable": true, "description": "Beneficial owner's last name" },
+          "birth_date": { "type": "string", "nullable": true, "description": "Birth date as text" },
+          "direct_shares_pct": { "type": "number", "nullable": true, "description": "Percentage of direct shares" },
+          "indirect_shares_pct": { "type": "number", "nullable": true, "description": "Percentage of indirect shares" },
+          "voting_rights_pct": { "type": "number", "nullable": true, "description": "Percentage of voting rights" },
+          "company_id": { "type": "string", "format": "uuid", "description": "Reference to company" },
+          "company": { "$ref": "#/components/schemas/Company", "description": "Associated company" }
+        },
+        "required": ["id", "company_id"]
+      },
+      "BeneficialOwnerInput": {
+        "type": "object",
+        "properties": {
+          "first_name": { "type": "string", "nullable": true, "description": "Beneficial owner's first name" },
+          "last_name": { "type": "string", "nullable": true, "description": "Beneficial owner's last name" },
+          "birth_date": { "type": "string", "nullable": true, "description": "Birth date as text" },
+          "direct_shares_pct": { "type": "number", "nullable": true, "description": "Percentage of direct shares" },
+          "indirect_shares_pct": { "type": "number", "nullable": true, "description": "Percentage of indirect shares" },
+          "voting_rights_pct": { "type": "number", "nullable": true, "description": "Percentage of voting rights" },
+          "company_id": { "type": "string", "format": "uuid", "description": "Reference to company" }
+        },
+        "required": ["company_id"]
+      },
+      "FinancialStatement": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "description": "Unique identifier (UUID)" },
+          "year": { "type": "integer", "description": "Financial year" },
+          "sales": { "type": "number", "nullable": true, "description": "Sales amount" },
+          "profit": { "type": "number", "nullable": true, "description": "Profit amount" },
+          "staff": { "type": "integer", "nullable": true, "description": "Number of staff" },
+          "closing_date": { "type": "string", "format": "date", "nullable": true, "description": "Financial statement closing date" },
+          "is_estimated": { "type": "boolean", "nullable": true, "description": "Indicates if data is estimated" },
+          "company_id": { "type": "string", "format": "uuid", "description": "Reference to company" },
+          "company": { "$ref": "#/components/schemas/Company", "description": "Associated company" }
+        },
+        "required": ["id", "year", "company_id"]
+      },
+      "FinancialStatementInput": {
+        "type": "object",
+        "properties": {
+          "year": { "type": "integer", "description": "Financial year" },
+          "sales": { "type": "number", "nullable": true, "description": "Sales amount" },
+          "profit": { "type": "number", "nullable": true, "description": "Profit amount" },
+          "staff": { "type": "integer", "nullable": true, "description": "Number of staff" },
+          "closing_date": { "type": "string", "format": "date", "nullable": true, "description": "Financial statement closing date" },
+          "is_estimated": { "type": "boolean", "nullable": true, "description": "Indicates if data is estimated" },
+          "company_id": { "type": "string", "format": "uuid", "description": "Reference to company" }
+        },
+        "required": ["year", "company_id"]
+      },
+      "RiskAssessment": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "description": "Unique identifier (UUID)" },
+          "risk_level": { "type": "integer", "minimum": 0, "maximum": 5, "description": "Risk level (0-5)" },
+          "description": { "type": "string", "nullable": true, "description": "Risk assessment description" },
+          "collective_procedure": { "type": "boolean", "nullable": true, "description": "Indicates if under collective procedure" },
+          "company_id": { "type": "string", "format": "uuid", "description": "Reference to company (unique)" },
+          "company": { "$ref": "#/components/schemas/Company", "description": "Associated company" }
+        },
+        "required": ["id", "risk_level", "company_id"]
+      },
+      "RiskAssessmentInput": {
+        "type": "object",
+        "properties": {
+          "risk_level": { "type": "integer", "minimum": 0, "maximum": 5, "description": "Risk level (0-5)" },
+          "description": { "type": "string", "nullable": true, "description": "Risk assessment description" },
+          "collective_procedure": { "type": "boolean", "nullable": true, "description": "Indicates if under collective procedure" },
+          "company_id": { "type": "string", "format": "uuid", "description": "Reference to company" }
+        },
+        "required": ["risk_level", "company_id"]
+      },
+      "BodaccNotice": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "description": "Unique identifier (UUID)" },
+          "type": { "type": "string", "nullable": true, "description": "Type of BODACC notice" },
+          "parution_date": { "type": "string", "format": "date", "nullable": true, "description": "Publication date" },
+          "number": { "type": "string", "nullable": true, "description": "Notice number" },
+          "description": { "type": "string", "nullable": true, "description": "Notice description" },
+          "company_id": { "type": "string", "format": "uuid", "description": "Reference to company" },
+          "company": { "$ref": "#/components/schemas/Company", "description": "Associated company" }
+        },
+        "required": ["id", "company_id"]
+      },
+      "BodaccNoticeInput": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "nullable": true, "description": "Type of BODACC notice" },
+          "parution_date": { "type": "string", "format": "date", "nullable": true, "description": "Publication date" },
+          "number": { "type": "string", "nullable": true, "description": "Notice number" },
+          "description": { "type": "string", "nullable": true, "description": "Notice description" },
+          "company_id": { "type": "string", "format": "uuid", "description": "Reference to company" }
+        },
+        "required": ["company_id"]
+      },
+      "LegalAct": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "description": "Unique identifier (UUID)" },
+          "date": { "type": "string", "format": "date", "nullable": true, "description": "Date of legal act" },
+          "type": { "type": "string", "nullable": true, "description": "Type of legal act" },
+          "description": { "type": "string", "nullable": true, "description": "Legal act description" },
+          "company_id": { "type": "string", "format": "uuid", "description": "Reference to company" },
+          "company": { "$ref": "#/components/schemas/Company", "description": "Associated company" }
+        },
+        "required": ["id", "company_id"]
+      },
+      "LegalActInput": {
+        "type": "object",
+        "properties": {
+          "date": { "type": "string", "format": "date", "nullable": true, "description": "Date of legal act" },
+          "type": { "type": "string", "nullable": true, "description": "Type of legal act" },
+          "description": { "type": "string", "nullable": true, "description": "Legal act description" },
+          "company_id": { "type": "string", "format": "uuid", "description": "Reference to company" }
+        },
+        "required": ["company_id"]
+      },
+      "WebInfo": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "description": "Unique identifier (UUID)" },
+          "logos": { "type": "array", "items": { "type": "string" }, "nullable": true, "description": "Array of logo URLs" },
+          "websites": { "type": "array", "items": { "type": "string" }, "nullable": true, "description": "Array of website URLs" },
+          "linkedin_url": { "type": "string", "nullable": true, "description": "LinkedIn URL" },
+          "twitter_url": { "type": "string", "nullable": true, "description": "Twitter URL" },
+          "facebook_url": { "type": "string", "nullable": true, "description": "Facebook URL" },
+          "instagram_url": { "type": "string", "nullable": true, "description": "Instagram URL" },
+          "company_id": { "type": "string", "format": "uuid", "description": "Reference to company (unique)" },
+          "company": { "$ref": "#/components/schemas/Company", "description": "Associated company" }
+        },
+        "required": ["id", "company_id"]
+      },
+      "WebInfoInput": {
+        "type": "object",
+        "properties": {
+          "logos": { "type": "array", "items": { "type": "string" }, "nullable": true, "description": "Array of logo URLs" },
+          "websites": { "type": "array", "items": { "type": "string" }, "nullable": true, "description": "Array of website URLs" },
+          "linkedin_url": { "type": "string", "nullable": true, "description": "LinkedIn URL" },
+          "twitter_url": { "type": "string", "nullable": true, "description": "Twitter URL" },
+          "facebook_url": { "type": "string", "nullable": true, "description": "Facebook URL" },
+          "instagram_url": { "type": "string", "nullable": true, "description": "Instagram URL" },
+          "company_id": { "type": "string", "format": "uuid", "description": "Reference to company" }
+        },
+        "required": ["company_id"]
+      },
+      "Email": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "description": "Unique identifier (UUID)" },
+          "value": { "type": "string", "description": "Email address" },
+          "type": { "type": "string", "enum": ["generic", "personal"], "description": "Email type" },
+          "test_result": { "type": "string", "nullable": true, "description": "Result of email validation test" },
+          "test_date": { "type": "string", "format": "date", "nullable": true, "description": "Date of email validation test" },
+          "company_id": { "type": "string", "format": "uuid", "description": "Reference to company" },
+          "company": { "$ref": "#/components/schemas/Company", "description": "Associated company" }
+        },
+        "required": ["id", "value", "type", "company_id"]
+      },
+      "EmailInput": {
+        "type": "object",
+        "properties": {
+          "value": { "type": "string", "description": "Email address" },
+          "type": { "type": "string", "enum": ["generic", "personal"], "description": "Email type" },
+          "test_result": { "type": "string", "nullable": true, "description": "Result of email validation test" },
+          "test_date": { "type": "string", "format": "date", "nullable": true, "description": "Date of email validation test" },
+          "company_id": { "type": "string", "format": "uuid", "description": "Reference to company" }
+        },
+        "required": ["value", "type", "company_id"]
+      },
+      "Address": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "description": "Unique identifier (UUID)" },
+          "street": { "type": "string", "nullable": true, "description": "Street address" },
+          "postal_code": { "type": "string", "nullable": true, "description": "Postal code (max 10 characters)" },
+          "city": { "type": "string", "nullable": true, "description": "City" },
+          "country_code": { "type": "string", "nullable": true, "description": "Country code (max 5 characters)" },
+          "lat": { "type": "number", "nullable": true, "description": "Latitude" },
+          "lng": { "type": "number", "nullable": true, "description": "Longitude" }
+        },
+        "required": ["id"]
+      },
+      "AddressInput": {
+        "type": "object",
+        "properties": {
+          "street": { "type": "string", "nullable": true, "description": "Street address" },
+          "postal_code": { "type": "string", "nullable": true, "description": "Postal code (max 10 characters)" },
+          "city": { "type": "string", "nullable": true, "description": "City" },
+          "country_code": { "type": "string", "nullable": true, "description": "Country code (max 5 characters)" },
+          "lat": { "type": "number", "nullable": true, "description": "Latitude" },
+          "lng": { "type": "number", "nullable": true, "description": "Longitude" }
+        },
+        "required": []
+      },
+      "File": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "description": "Unique identifier (UUID)" },
+          "file_name": { "type": "string", "nullable": true, "description": "Name of the file" },
+          "upload_date": { "type": "string", "format": "date-time", "nullable": true, "description": "File upload date" },
+          "row_count": { "type": "integer", "nullable": true, "description": "Number of rows in the file" },
+          "enriched_row_count": { "type": "integer", "nullable": true, "description": "Number of enriched rows" },
+          "status": {
+            "type": "string",
+            "enum": ["uploaded", "processing", "completed", "error"],
+            "nullable": true,
+            "description": "File processing status"
+          },
+          "first_name": { "type": "string", "nullable": true, "description": "First name from file data" },
+          "last_name": { "type": "string", "nullable": true, "description": "Last name from file data" },
+          "gender": { "type": "string", "nullable": true, "description": "Gender from file data" },
+          "title": { "type": "string", "nullable": true, "description": "Job title from file data" },
+          "email": { "type": "string", "nullable": true, "description": "Email from file data" },
+          "phone": { "type": "string", "nullable": true, "description": "Phone number from file data" },
+          "all_phones": { "type": "string", "nullable": true, "description": "All phone numbers as text" },
+          "company_name": { "type": "string", "nullable": true, "description": "Company name from file data" },
+          "company_cleaned_name": { "type": "string", "nullable": true, "description": "Cleaned company name" },
+          "company_website": { "type": "string", "nullable": true, "description": "Company website URL" },
+          "company_domain": { "type": "string", "nullable": true, "description": "Company domain" },
+          "linkedin_profile_url": { "type": "string", "nullable": true, "description": "LinkedIn profile URL" },
+          "company_linkedin_id_url": { "type": "string", "nullable": true, "description": "Company LinkedIn ID URL" },
+          "location": { "type": "string", "nullable": true, "description": "Location from file data" },
+          "company_location": { "type": "string", "nullable": true, "description": "Company location" },
+          "company_industry": { "type": "string", "nullable": true, "description": "Company industry" },
+          "employee_count": { "type": "string", "nullable": true, "description": "Employee count as text" },
+          "employee_range": { "type": "string", "nullable": true, "description": "Employee count range" },
+          "revenue": { "type": "string", "nullable": true, "description": "Revenue as text" },
+          "headquarters": { "type": "string", "nullable": true, "description": "Company headquarters location" },
+          "year_founded": { "type": "string", "nullable": true, "description": "Year company was founded" },
+
+
+          "linkedin_headline": { "type": "string", "nullable": true, "description": "LinkedIn headline" },
+          "linkedin_connections_count": { "type": "integer", "nullable": true, "description": "Number of LinkedIn connections" },
+          "start_date_job": { "type": "string", "nullable": true, "description": "Job start date" },
+          "start_date_company": { "type": "string", "nullable": true, "description": "Company start date" },
+          "years_in_position": { "type": "integer", "nullable": true, "description": "Years in current position" },
+          "months_in_position": { "type": "integer", "nullable": true, "description": "Months in current position" },
+          "years_in_company": { "type": "integer", "nullable": true, "description": "Years in company" },
+          "months_in_company": { "type": "integer", "nullable": true, "description": "Months in company" },
+          "current_positions_count": { "type": "integer", "nullable": true, "description": "Number of current positions" },
+          "title_description": { "type": "string", "nullable": true, "description": "Job title description" },
+          "summary": { "type": "string", "nullable": true, "description": "Profile summary" },
+          "full_name": { "type": "string", "nullable": true, "description": "Full name from file data" },
+          "sales_navigator_profile_url": { "type": "string", "nullable": true, "description": "Sales Navigator profile URL" },
+          "linkedin_id_url": { "type": "string", "nullable": true, "description": "LinkedIn ID URL" },
+          "profile_image_url": { "type": "string", "nullable": true, "description": "Profile image URL" },
+          "company_profile_picture": { "type": "string", "nullable": true, "description": "Company profile picture URL" },
+          "company_description": { "type": "string", "nullable": true, "description": "Company description" },
+          "company_linkedin": { "type": "string", "nullable": true, "description": "Company LinkedIn URL" },
+          "connection_degree": { "type": "string", "nullable": true, "description": "LinkedIn connection degree" },
+          "is_premium_linkedin": { "type": "boolean", "nullable": true, "description": "Indicates if LinkedIn profile is premium" },
+          "is_open_profile_linkedin": { "type": "boolean", "nullable": true, "description": "Indicates if LinkedIn profile is open" },
+          "is_open_to_work_linkedin": { "type": "boolean", "nullable": true, "description": "Indicates if open to work on LinkedIn" },
+          "email_alt": { "type": "string", "nullable": true, "description": "Alternative email" },
+          "phone_alt": { "type": "string", "nullable": true, "description": "Alternative phone number" },
+          "all_phones_alt": { "type": "string", "nullable": true, "description": "All alternative phone numbers as text" },
+          "company_id": { "type": "string", "format": "uuid", "nullable": true, "description": "Reference to company" },
+          "company": { "$ref": "#/components/schemas/Company", "nullable": true, "description": "Associated company" }
+        },
+        "required": ["id"]
+      },
+      "FileInput": {
+        "type": "object",
+        "properties": {
+          "file_name": { "type": "string", "nullable": true, "description": "Name of the file" },
+          "upload_date": { "type": "string", "format": "date-time", "nullable": true, "description": "File upload date" },
+          "row_count": { "type": "integer", "nullable": true, "description": "Number of rows in the file" },
+          "enriched_row_count": { "type": "integer", "nullable": true, "description": "Number of enriched rows" },
+          "status": {
+            "type": "string",
+            "enum": ["uploaded", "processing", "completed", "error"],
+            "nullable": true,
+            "description": "File processing status"
+          },
+          "first_name": { "type": "string", "nullable": true, "description": "First name from file data" },
+          "last_name": { "type": "string", "nullable": true, "description": "Last name from file data" },
+          "gender": { "type": "string", "nullable": true, "description": "Gender from file data" },
+          "title": { "type": "string", "nullable": true, "description": "Job title from file data" },
+          "email": { "type": "string", "nullable": true, "description": "Email from file data" },
+          "phone": { "type": "string", "nullable": true, "description": "Phone number from file data" },
+          "all_phones": { "type": "string", "nullable": true, "description": "All phone numbers as text" },
+          "company_name": { "type": "string", "nullable": true, "description": "Company name from file data" },
+          "company_cleaned_name": { "type": "string", "nullable": true, "description": "Cleaned company name" },
+          "company_website": { "type": "string", "nullable": true, "description": "Company website URL" },
+          "company_domain": { "type": "string", "nullable": true, "description": "Company domain" },
+          "linkedin_profile_url": { "type": "string", "nullable": true, "description": "LinkedIn profile URL" },
+          "company_linkedin_id_url": { "type": "string", "nullable": true, "description": "Company LinkedIn ID URL" },
+          "location": { "type": "string", "nullable": true, "description": "Location from file data" },
+          "company_location": { "type": "string", "nullable": true, "description": "Company location" },
+          "company_industry": { "type": "string", "nullable": true, "description": "Company industry" },
+          "employee_count": { "type": "string", "nullable": true, "description": "Employee count as text" },
+          "employee_range": { "type": "string", "nullable": true, "description": "Employee count range" },
+          "revenue": { "type": "string", "nullable": true, "description": "Revenue as text" },
+          "headquarters": { "type": "string", "nullable": true, "description": "Company headquarters location" },
+          "year_founded": { "type": "string", "nullable": true, "description": "Year company was founded" },
+          "linkedin_headline": { "type": "string", "nullable": true, "description": "LinkedIn headline" },
+          "linkedin_connections_count": { "type": "integer", "nullable": true, "description": "Number of LinkedIn connections" },
+          "start_date_job": { "type": "string", "nullable": true, "description": "Job start date" },
+          "start_date_company": { "type": "string", "nullable": true, "description": "Company start date" },
+          "years_in_position": { "type": "integer", "nullable": true, "description": "Years in current position" },
+          "months_in_position": { "type": "integer", "nullable": true, "description": "Months in current position" },
+          "years_in_company": { "type": "integer", "nullable": true, "description": "Years in company" },
+          "months_in_company": { "type": "integer", "nullable": true, "description": "Months in company" },
+          "current_positions_count": { "type": "integer", "nullable": true, "description": "Number of current positions" },
+          "title_description": { "type": "string", "nullable": true, "description": "Job title description" },
+          "summary": { "type": "string", "nullable": true, "description": "Profile summary" },
+          "full_name": { "type": "string", "nullable": true, "description": "Full name from file data" },
+          "sales_navigator_profile_url": { "type": "string", "nullable": true, "description": "Sales Navigator profile URL" },
+          "linkedin_id_url": { "type": "string", "nullable": true, "description": "LinkedIn ID URL" },
+          "profile_image_url": { "type": "string", "nullable": true, "description": "Profile image URL" },
+          "company_profile_picture": { "type": "string", "nullable": true, "description": "Company profile picture URL" },
+          "company_description": { "type": "string", "nullable": true, "description": "Company description" },
+          "company_linkedin": { "type": "string", "nullable": true, "description": "Company LinkedIn URL" },
+          "connection_degree": { "type": "string", "nullable": true, "description": "LinkedIn connection degree" },
+          "is_premium_linkedin": { "type": "boolean", "nullable": true, "description": "Indicates if LinkedIn profile is premium" },
+          "is_open_profile_linkedin": { "type": "boolean", "nullable": true, "description": "Indicates if LinkedIn profile is open" },
+          "is_open_to_work_linkedin": { "type": "boolean", "nullable": true, "description": "Indicates if open to work on LinkedIn" },
+          "email_alt": { "type": "string", "nullable": true, "description": "Alternative email" },
+          "phone_alt": { "type": "string", "nullable": true, "description": "Alternative phone number" },
+          "all_phones_alt": { "type": "string", "nullable": true, "description": "All alternative phone numbers as text" },
+          "company_id": { "type": "string", "format": "uuid", "nullable": true, "description": "Reference to company" }
+        },
+        "required": []
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Queries",
+      "description": "GraphQL queries for retrieving data (read-only operations, equivalent to HTTP GET)"
+    },
+    {
+      "name": "Mutations",
+      "description": "GraphQL mutations for creating, updating, or deleting data (equivalent to HTTP POST, PUT, DELETE)"
+    },
+    {
+      "name": "GraphQL",
+      "description": "Operations performed via the GraphQL endpoint"
+    }
+  ],
+  "x-endpoint-descriptions": [
+    {
+      "operation": "query company",
+      "description": "Retrieve a single company by ID",
+      "equivalent": "GET",
+      "example": {
+        "request": {
+          "query": "query GetCompany($id: ID!) { company(id: $id) { id registration_number name } }",
+          "variables": { "id": "123e4567-e89b-12d3-a456-426614174000" }
+        },
+        "response": {
+          "data": {
+            "company": {
+              "id": "123e4567-e89b-12d3-a456-426614174000",
+              "registration_number": "123456789",
+              "name": "Example Corporation"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "query companies",
+      "description": "Retrieve all companies",
+      "equivalent": "GET",
+      "example": {
+        "request": {
+          "query": "query { companies { id registration_number name } }"
+        },
+        "response": {
+          "data": {
+            "companies": [
+              {
+                "id": "123e4567-e89b-12d3-a456-426614174000",
+                "registration_number": "123456789",
+                "name": "Example Corporation"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "operation": "query establishment",
+      "description": "Retrieve a single establishment by ID",
+      "equivalent": "GET",
+      "example": {
+        "request": {
+          "query": "query GetEstablishment($id: ID!) { establishment(id: $id) { id siret company { id name } } }",
+          "variables": { "id": "123e4567-e89b-12d3-a456-426614174001" }
+        },
+        "response": {
+          "data": {
+            "establishment": {
+              "id": "123e4567-e89b-12d3-a456-426614174001",
+              "siret": "987654321",
+              "company": {
+                "id": "123e4567-e89b-12d3-a456-426614174000",
+                "name": "Example Corporation"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "query establishments",
+      "description": "Retrieve all establishments",
+      "equivalent": "GET",
+      "example": {
+        "request": {
+          "query": "query { establishments { id siret } }"
+        },
+        "response": {
+          "data": {
+            "establishments": [
+              {
+                "id": "123e4567-e89b-12d3-a456-426614174001",
+                "siret": "987654321"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "operation": "query officer",
+      "description": "Retrieve a single officer by ID",
+      "equivalent": "GET",
+      "example": {
+        "request": {
+          "query": "query GetOfficer($id: ID!) { officer(id: $id) { id first_name last_name role } }",
+          "variables": { "id": "123e4567-e89b-12d3-a456-426614174002" }
+        },
+        "response": {
+          "data": {
+            "officer": {
+              "id": "123e4567-e89b-12d3-a456-426614174002",
+              "first_name": "John",
+              "last_name": "Doe",
+              "role": "CEO"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "query officers",
+      "description": "Retrieve all officers",
+      "equivalent": "GET",
+      "example": {
+        "request": {
+          "query": "query { officers { id first_name last_name role } }"
+        },
+        "response": {
+          "data": {
+            "officers": [
+              {
+                "id": "123e4567-e89b-12d3-a456-426614174002",
+                "first_name": "John",
+                "last_name": "Doe",
+                "role": "CEO"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "operation": "query file",
+      "description": "Retrieve a single file by ID",
+      "equivalent": "GET",
+      "example": {
+        "request": {
+          "query": "query GetFile($id: ID!) { file(id: $id) { id file_name company { id name } } }",
+          "variables": { "id": "123e4567-e89b-12d3-a456-426614174004" }
+        },
+        "response": {
+          "data": {
+            "file": {
+              "id": "123e4567-e89b-12d3-a456-426614174004",
+              "file_name": "report.pdf",
+              "company": {
+                "id": "123e4567-e89b-12d3-a456-426614174000",
+                "name": "Example Corporation"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "query files",
+      "description": "Retrieve all files",
+      "equivalent": "GET",
+      "example": {
+        "request": {
+          "query": "query { files { id file_name } }"
+        },
+        "response": {
+          "data": {
+            "files": [
+              {
+                "id": "123e4567-e89b-12d3-a456-426614174004",
+                "file_name": "report.pdf"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "operation": "query beneficialOwner",
+      "description": "Retrieve a single beneficial owner by ID",
+      "equivalent": "GET",
+      "example": {
+        "request": {
+          "query": "query GetBeneficialOwner($id: ID!) { beneficialOwner(id: $id) { id first_name last_name } }",
+          "variables": { "id": "123e4567-e89b-12d3-a456-426614174003" }
+        },
+        "response": {
+          "data": {
+            "beneficialOwner": {
+              "id": "123e4567-e89b-12d3-a456-426614174003",
+              "first_name": "Jane",
+              "last_name": "Doe"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "query beneficialOwners",
+      "description": "Retrieve all beneficial owners",
+      "equivalent": "GET",
+      "example": {
+        "request": {
+          "query": "query { beneficialOwners { id first_name last_name } }"
+        },
+        "response": {
+          "data": {
+            "beneficialOwners": [
+              {
+                "id": "123e4567-e89b-12d3-a456-426614174003",
+                "first_name": "Jane",
+                "last_name": "Doe"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "operation": "query financialStatement",
+      "description": "Retrieve a single financial statement by ID",
+      "equivalent": "GET",
+      "example": {
+        "request": {
+          "query": "query GetFinancialStatement($id: ID!) { financialStatement(id: $id) { id year sales } }",
+          "variables": { "id": "123e4567-e89b-12d3-a456-426614174005" }
+        },
+        "response": {
+          "data": {
+            "financialStatement": {
+              "id": "123e4567-e89b-12d3-a456-426614174005",
+              "year": 2023,
+              "sales": 1000000
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "query financialStatements",
+      "description": "Retrieve all financial statements",
+      "equivalent": "GET",
+      "example": {
+        "request": {
+          "query": "query { financialStatements { id year sales } }"
+        },
+        "response": {
+          "data": {
+            "financialStatements": [
+              {
+                "id": "123e4567-e89b-12d3-a456-426614174005",
+                "year": 2023,
+                "sales": 1000000
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "operation": "query riskAssessment",
+      "description": "Retrieve a single risk assessment by ID",
+      "equivalent": "GET",
+      "example": {
+        "request": {
+          "query": "query GetRiskAssessment($id: ID!) { riskAssessment(id: $id) { id risk_level } }",
+          "variables": { "id": "123e4567-e89b-12d3-a456-426614174006" }
+        },
+        "response": {
+          "data": {
+            "riskAssessment": {
+              "id": "123e4567-e89b-12d3-a456-426614174006",
+              "risk_level": 2
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "query riskAssessments",
+      "description": "Retrieve all risk assessments",
+      "equivalent": "GET",
+      "example": {
+        "request": {
+          "query": "query { riskAssessments { id risk_level } }"
+        },
+        "response": {
+          "data": {
+            "riskAssessments": [
+              {
+                "id": "123e4567-e89b-12d3-a456-426614174006",
+                "risk_level": 2
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "operation": "query bodaccNotice",
+      "description": "Retrieve a single BODACC notice by ID",
+      "equivalent": "GET",
+      "example": {
+        "request": {
+          "query": "query GetBodaccNotice($id: ID!) { bodaccNotice(id: $id) { id type parution_date } }",
+          "variables": { "id": "123e4567-e89b-12d3-a456-426614174007" }
+        },
+        "response": {
+          "data": {
+            "bodaccNotice": {
+              "id": "123e4567-e89b-12d3-a456-426614174007",
+              "type": "Announcement",
+              "parution_date": "2023-01-01"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "query bodaccNotices",
+      "description": "Retrieve all BODACC notices",
+      "equivalent": "GET",
+      "example": {
+        "request": {
+          "query": "query { bodaccNotices { id type parution_date } }"
+        },
+        "response": {
+          "data": {
+            "bodaccNotices": [
+              {
+                "id": "123e4567-e89b-12d3-a456-426614174007",
+                "type": "Announcement",
+                "parution_date": "2023-01-01"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "operation": "query legalAct",
+      "description": "Retrieve a single legal act by ID",
+      "equivalent": "GET",
+      "example": {
+        "request": {
+          "query": "query GetLegalAct($id: ID!) { legalAct(id: $id) { id type date } }",
+          "variables": { "id": "123e4567-e89b-12d3-a456-426614174008" }
+        },
+        "response": {
+          "data": {
+            "legalAct": {
+              "id": "123e4567-e89b-12d3-a456-426614174008",
+              "type": "Merger",
+              "date": "2023-01-01"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "query legalActs",
+      "description": "Retrieve all legal acts",
+      "equivalent": "GET",
+      "example": {
+        "request": {
+          "query": "query { legalActs { id type date } }"
+        },
+        "response": {
+          "data": {
+            "legalActs": [
+              {
+                "id": "123e4567-e89b-12d3-a456-426614174008",
+                "type": "Merger",
+                "date": "2023-01-01"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "operation": "query webInfo",
+      "description": "Retrieve a single web info by ID",
+      "equivalent": "GET",
+      "example": {
+        "request": {
+          "query": "query GetWebInfo($id: ID!) { webInfo(id: $id) { id linkedin_url } }",
+          "variables": { "id": "123e4567-e89b-12d3-a456-426614174009" }
+        },
+        "response": {
+          "data": {
+            "webInfo": {
+              "id": "123e4567-e89b-12d3-a456-426614174009",
+              "linkedin_url": "https://linkedin.com/company/example"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "query webInfos",
+      "description": "Retrieve all web infos",
+      "equivalent": "GET",
+      "example": {
+        "request": {
+          "query": "query { webInfos { id linkedin_url } }"
+        },
+        "response": {
+          "data": {
+            "webInfos": [
+              {
+                "id": "123e4567-e89b-12d3-a456-426614174009",
+                "linkedin_url": "https://linkedin.com/company/example"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "operation": "query email",
+      "description": "Retrieve a single email by ID",
+      "equivalent": "GET",
+      "example": {
+        "request": {
+          "query": "query GetEmail($id: ID!) { email(id: $id) { id value type } }",
+          "variables": { "id": "123e4567-e89b-12d3-a456-426614174010" }
+        },
+        "response": {
+          "data": {
+            "email": {
+              "id": "123e4567-e89b-12d3-a456-426614174010",
+              "value": "contact@example.com",
+              "type": "generic"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "query emails",
+      "description": "Retrieve all emails",
+      "equivalent": "GET",
+      "example": {
+        "request": {
+          "query": "query { emails { id value type } }"
+        },
+        "response": {
+          "data": {
+            "emails": [
+              {
+                "id": "123e4567-e89b-12d3-a456-426614174010",
+                "value": "contact@example.com",
+                "type": "generic"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "operation": "query address",
+      "description": "Retrieve a single address by ID",
+      "equivalent": "GET",
+      "example": {
+        "request": {
+          "query": "query GetAddress($id: ID!) { address(id: $id) { id street city } }",
+          "variables": { "id": "123e4567-e89b-12d3-a456-426614174011" }
+        },
+        "response": {
+          "data": {
+            "address": {
+              "id": "123e4567-e89b-12d3-a456-426614174011",
+              "street": "123 Main St",
+              "city": "Paris"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "query addresses",
+      "description": "Retrieve all addresses",
+      "equivalent": "GET",
+      "example": {
+        "request": {
+          "query": "query { addresses { id street city } }"
+        },
+        "response": {
+          "data": {
+            "addresses": [
+              {
+                "id": "123e4567-e89b-12d3-a456-426614174011",
+                "street": "123 Main St",
+                "city": "Paris"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation createCompany",
+      "description": "Create a new company",
+      "equivalent": "POST",
+      "example": {
+        "request": {
+          "query": "mutation CreateCompany($input: CompanyInput!) { createCompany(input: $input) { id registration_number name } }",
+          "variables": {
+            "input": {
+              "registration_number": "123456789",
+              "full_registration_number": "FR123456789",
+              "name": "Example Corporation"
+            }
+          }
+        },
+        "response": {
+          "data": {
+            "createCompany": {
+              "id": "123e4567-e89b-12d3-a456-426614174000",
+              "registration_number": "123456789",
+              "name": "Example Corporation"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation updateCompany",
+      "description": "Update an existing company",
+      "equivalent": "PUT",
+      "example": {
+        "request": {
+          "query": "mutation UpdateCompany($id: ID!, $input: CompanyInput!) { updateCompany(id: $id, input: $input) { id name } }",
+          "variables": {
+            "id": "123e4567-e89b-12d3-a456-426614174000",
+            "input": {
+              "name": "Updated Corporation"
+            }
+          }
+        },
+        "response": {
+          "data": {
+            "updateCompany": {
+              "id": "123e4567-e89b-12d3-a456-426614174000",
+              "name": "Updated Corporation"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation deleteCompany",
+      "description": "Delete a company by ID",
+      "equivalent": "DELETE",
+      "example": {
+        "request": {
+          "query": "mutation DeleteCompany($id: ID!) { deleteCompany(id: $id) }",
+          "variables": { "id": "123e4567-e89b-12d3-a456-426614174000" }
+        },
+        "response": {
+          "data": {
+            "deleteCompany": true
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation createEstablishment",
+      "description": "Create a new establishment",
+      "equivalent": "POST",
+      "example": {
+        "request": {
+          "query": "mutation CreateEstablishment($input: EstablishmentInput!) { createEstablishment(input: $input) { id siret company_id } }",
+          "variables": {
+            "input": {
+              "siret": "987654321",
+              "is_head_office": true,
+              "company_id": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        },
+        "response": {
+          "data": {
+            "createEstablishment": {
+              "id": "123e4567-e89b-12d3-a456-426614174001",
+              "siret": "987654321",
+              "company_id": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation updateEstablishment",
+      "description": "Update an existing establishment",
+      "equivalent": "PUT",
+      "example": {
+        "request": {
+          "query": "mutation UpdateEstablishment($id: ID!, $input: EstablishmentInput!) { updateEstablishment(id: $id, input: $input) { id siret } }",
+          "variables": {
+            "id": "123e4567-e89b-12d3-a456-426614174001",
+            "input": {
+              "siret": "987654322"
+            }
+          }
+        },
+        "response": {
+          "data": {
+            "updateEstablishment": {
+              "id": "123e4567-e89b-12d3-a456-426614174001",
+              "siret": "987654322"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation deleteEstablishment",
+      "description": "Delete an establishment by ID",
+      "equivalent": "DELETE",
+      "example": {
+        "request": {
+          "query": "mutation DeleteEstablishment($id: ID!) { deleteEstablishment(id: $id) }",
+          "variables": { "id": "123e4567-e89b-12d3-a456-426614174001" }
+        },
+        "response": {
+          "data": {
+            "deleteEstablishment": true
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation createOfficer",
+      "description": "Create a new officer",
+      "equivalent": "POST",
+      "example": {
+        "request": {
+          "query": "mutation CreateOfficer($input: OfficerInput!) { createOfficer(input: $input) { id first_name last_name role } }",
+          "variables": {
+            "input": {
+              "first_name": "John",
+              "last_name": "Doe",
+              "role": "CEO",
+              "company_id": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        },
+        "response": {
+          "data": {
+            "createOfficer": {
+              "id": "123e4567-e89b-12d3-a456-426614174002",
+              "first_name": "John",
+              "last_name": "Doe",
+              "role": "CEO"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation updateOfficer",
+      "description": "Update an existing officer",
+      "equivalent": "PUT",
+      "example": {
+        "request": {
+          "query": "mutation UpdateOfficer($id: ID!, $input: OfficerInput!) { updateOfficer(id: $id, input: $input) { id role } }",
+          "variables": {
+            "id": "123e4567-e89b-12d3-a456-426614174002",
+            "input": {
+              "role": "CFO"
+            }
+          }
+        },
+        "response": {
+          "data": {
+            "updateOfficer": {
+              "id": "123e4567-e89b-12d3-a456-426614174002",
+              "role": "CFO"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation deleteOfficer",
+      "description": "Delete an officer by ID",
+      "equivalent": "DELETE",
+      "example": {
+        "request": {
+          "query": "mutation DeleteOfficer($id: ID!) { deleteOfficer(id: $id) }",
+          "variables": { "id": "123e4567-e89b-12d3-a456-426614174002" }
+        },
+        "response": {
+          "data": {
+            "deleteOfficer": true
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation createFile",
+      "description": "Create a new file",
+      "equivalent": "POST",
+      "example": {
+        "request": {
+          "query": "mutation CreateFile($input: FileInput!) { createFile(input: $input) { id file_name company_id } }",
+          "variables": {
+            "input": {
+              "file_name": "report.pdf",
+              "status": "uploaded",
+              "company_id": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        },
+        "response": {
+          "data": {
+            "createFile": {
+              "id": "123e4567-e89b-12d3-a456-426614174004",
+              "file_name": "report.pdf",
+              "company_id": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation updateFile",
+      "description": "Update an existing file",
+      "equivalent": "PUT",
+      "example": {
+        "request": {
+          "query": "mutation UpdateFile($id: ID!, $input: FileInput!) { updateFile(id: $id, input: $input) { id file_name } }",
+          "variables": {
+            "id": "123e4567-e89b-12d3-a456-426614174004",
+            "input": {
+              "file_name": "updated_report.pdf"
+            }
+          }
+        },
+        "response": {
+          "data": {
+            "updateFile": {
+              "id": "123e4567-e89b-12d3-a456-426614174004",
+              "file_name": "updated_report.pdf"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation deleteFile",
+      "description": "Delete a file by ID",
+      "equivalent": "DELETE",
+      "example": {
+        "request": {
+          "query": "mutation DeleteFile($id: ID!) { deleteFile(id: $id) }",
+          "variables": { "id": "123e4567-e89b-12d3-a456-426614174004" }
+        },
+        "response": {
+          "data": {
+            "deleteFile": true
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation createBeneficialOwner",
+      "description": "Create a new beneficial owner",
+      "equivalent": "POST",
+      "example": {
+        "request": {
+          "query": "mutation CreateBeneficialOwner($input: BeneficialOwnerInput!) { createBeneficialOwner(input: $input) { id first_name last_name } }",
+          "variables": {
+            "input": {
+              "first_name": "Jane",
+              "last_name": "Doe",
+              "birth_date": "1980-01-01",
+              "direct_shares_pct": 25.5,
+              "company_id": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        },
+        "response": {
+          "data": {
+            "createBeneficialOwner": {
+              "id": "123e4567-e89b-12d3-a456-426614174003",
+              "first_name": "Jane",
+              "last_name": "Doe"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation updateBeneficialOwner",
+      "description": "Update an existing beneficial owner",
+      "equivalent": "PUT",
+      "example": {
+        "request": {
+          "query": "mutation UpdateBeneficialOwner($id: ID!, $input: BeneficialOwnerInput!) { updateBeneficialOwner(id: $id, input: $input) { id first_name } }",
+          "variables": {
+            "id": "123e4567-e89b-12d3-a456-426614174003",
+            "input": {
+              "first_name": "Janet"
+            }
+          }
+        },
+        "response": {
+          "data": {
+            "updateBeneficialOwner": {
+              "id": "123e4567-e89b-12d3-a456-426614174003",
+              "first_name": "Janet"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation deleteBeneficialOwner",
+      "description": "Delete a beneficial owner by ID",
+      "equivalent": "DELETE",
+      "example": {
+        "request": {
+          "query": "mutation DeleteBeneficialOwner($id: ID!) { deleteBeneficialOwner(id: $id) }",
+          "variables": { "id": "123e4567-e89b-12d3-a456-426614174003" }
+        },
+        "response": {
+          "data": {
+            "deleteBeneficialOwner": true
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation createFinancialStatement",
+      "description": "Create a new financial statement",
+      "equivalent": "POST",
+      "example": {
+        "request": {
+          "query": "mutation CreateFinancialStatement($input: FinancialStatementInput!) { createFinancialStatement(input: $input) { id year sales } }",
+          "variables": {
+            "input": {
+              "year": 2023,
+              "sales": 1000000,
+              "company_id": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        },
+        "response": {
+          "data": {
+            "createFinancialStatement": {
+              "id": "123e4567-e89b-12d3-a456-426614174005",
+              "year": 2023,
+              "sales": 1000000
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation updateFinancialStatement",
+      "description": "Update an existing financial statement",
+      "equivalent": "PUT",
+      "example": {
+        "request": {
+          "query": "mutation UpdateFinancialStatement($id: ID!, $input: FinancialStatementInput!) { updateFinancialStatement(id: $id, input: $input) { id year sales } }",
+          "variables": {
+            "id": "123e4567-e89b-12d3-a456-426614174005",
+            "input": {
+              "sales": 1200000
+            }
+          }
+        },
+        "response": {
+          "data": {
+            "updateFinancialStatement": {
+              "id": "123e4567-e89b-12d3-a456-426614174005",
+              "year": 2023,
+              "sales": 1200000
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation deleteFinancialStatement",
+      "description": "Delete a financial statement by ID",
+      "equivalent": "DELETE",
+      "example": {
+        "request": {
+          "query": "mutation DeleteFinancialStatement($id: ID!) { deleteFinancialStatement(id: $id) }",
+          "variables": { "id": "123e4567-e89b-12d3-a456-426614174005" }
+        },
+        "response": {
+          "data": {
+            "deleteFinancialStatement": true
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation createRiskAssessment",
+      "description": "Create a new risk assessment",
+      "equivalent": "POST",
+      "example": {
+        "request": {
+          "query": "mutation CreateRiskAssessment($input: RiskAssessmentInput!) { createRiskAssessment(input: $input) { id risk_level } }",
+          "variables": {
+            "input": {
+              "risk_level": 2,
+              "company_id": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        },
+        "response": {
+          "data": {
+            "createRiskAssessment": {
+              "id": "123e4567-e89b-12d3-a456-426614174006",
+              "risk_level": 2
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation updateRiskAssessment",
+      "description": "Update an existing risk assessment",
+      "equivalent": "PUT",
+      "example": {
+        "request": {
+          "query": "mutation UpdateRiskAssessment($id: ID!, $input: RiskAssessmentInput!) { updateRiskAssessment(id: $id, input: $input) { id risk_level } }",
+          "variables": {
+            "id": "123e4567-e89b-12d3-a456-426614174006",
+            "input": {
+              "risk_level": 3
+            }
+          }
+        },
+        "response": {
+          "data": {
+            "updateRiskAssessment": {
+              "id": "123e4567-e89b-12d3-a456-426614174006",
+              "risk_level": 3
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation deleteRiskAssessment",
+      "description": "Delete a risk assessment by ID",
+      "equivalent": "DELETE",
+      "example": {
+        "request": {
+          "query": "mutation DeleteRiskAssessment($id: ID!) { deleteRiskAssessment(id: $id) }",
+          "variables": { "id": "123e4567-e89b-12d3-a456-426614174006" }
+        },
+        "response": {
+          "data": {
+            "deleteRiskAssessment": true
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation createBodaccNotice",
+      "description": "Create a new BODACC notice",
+      "equivalent": "POST",
+      "example": {
+        "request": {
+          "query": "mutation CreateBodaccNotice($input: BodaccNoticeInput!) { createBodaccNotice(input: $input) { id type parution_date } }",
+          "variables": {
+            "input": {
+              "type": "Announcement",
+              "parution_date": "2023-01-01",
+              "company_id": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        },
+        "response": {
+          "data": {
+            "createBodaccNotice": {
+              "id": "123e4567-e89b-12d3-a456-426614174007",
+              "type": "Announcement",
+              "parution_date": "2023-01-01"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation updateBodaccNotice",
+      "description": "Update an existing BODACC notice",
+      "equivalent": "PUT",
+      "example": {
+        "request": {
+          "query": "mutation UpdateBodaccNotice($id: ID!, $input: BodaccNoticeInput!) { updateBodaccNotice(id: $id, input: $input) { id type } }",
+          "variables": {
+            "id": "123e4567-e89b-12d3-a456-426614174007",
+            "input": {
+              "type": "Updated Announcement"
+            }
+          }
+        },
+        "response": {
+          "data": {
+            "updateBodaccNotice": {
+              "id": "123e4567-e89b-12d3-a456-426614174007",
+              "type": "Updated Announcement"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation deleteBodaccNotice",
+      "description": "Delete a BODACC notice by ID",
+      "equivalent": "DELETE",
+      "example": {
+        "request": {
+          "query": "mutation DeleteBodaccNotice($id: ID!) { deleteBodaccNotice(id: $id) }",
+          "variables": { "id": "123e4567-e89b-12d3-a456-426614174007" }
+        },
+        "response": {
+          "data": {
+            "deleteBodaccNotice": true
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation createLegalAct",
+      "description": "Create a new legal act",
+      "equivalent": "POST",
+      "example": {
+        "request": {
+          "query": "mutation CreateLegalAct($input: LegalActInput!) { createLegalAct(input: $input) { id type date } }",
+          "variables": {
+            "input": {
+              "type": "Merger",
+              "date": "2023-01-01",
+              "company_id": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        },
+        "response": {
+          "data": {
+            "createLegalAct": {
+              "id": "123e4567-e89b-12d3-a456-426614174008",
+              "type": "Merger",
+              "date": "2023-01-01"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation updateLegalAct",
+      "description": "Update an existing legal act",
+      "equivalent": "PUT",
+      "example": {
+        "request": {
+          "query": "mutation UpdateLegalAct($id: ID!, $input: LegalActInput!) { updateLegalAct(id: $id, input: $input) { id type } }",
+          "variables": {
+            "id": "123e4567-e89b-12d3-a456-426614174008",
+            "input": {
+              "type": "Acquisition"
+            }
+          }
+        },
+        "response": {
+          "data": {
+            "updateLegalAct": {
+              "id": "123e4567-e89b-12d3-a456-426614174008",
+              "type": "Acquisition"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation deleteLegalAct",
+      "description": "Delete a legal act by ID",
+      "equivalent": "DELETE",
+      "example": {
+        "request": {
+          "query": "mutation DeleteLegalAct($id: ID!) { deleteLegalAct(id: $id) }",
+          "variables": { "id": "123e4567-e89b-12d3-a456-426614174008" }
+        },
+        "response": {
+          "data": {
+            "deleteLegalAct": true
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation createWebInfo",
+      "description": "Create a new web info",
+      "equivalent": "POST",
+      "example": {
+        "request": {
+          "query": "mutation CreateWebInfo($input: WebInfoInput!) { createWebInfo(input: $input) { id linkedin_url } }",
+          "variables": {
+            "input": {
+              "linkedin_url": "https://linkedin.com/company/example",
+              "company_id": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        },
+        "response": {
+          "data": {
+            "createWebInfo": {
+              "id": "123e4567-e89b-12d3-a456-426614174009",
+              "linkedin_url": "https://linkedin.com/company/example"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation updateWebInfo",
+      "description": "Update an existing web info",
+      "equivalent": "PUT",
+      "example": {
+        "request": {
+          "query": "mutation UpdateWebInfo($id: ID!, $input: WebInfoInput!) { updateWebInfo(id: $id, input: $input) { id linkedin_url } }",
+          "variables": {
+            "id": "123e4567-e89b-12d3-a456-426614174009",
+            "input": {
+              "linkedin_url": "https://linkedin.com/company/updated-example"
+            }
+          }
+        },
+        "response": {
+          "data": {
+            "updateWebInfo": {
+              "id": "123e4567-e89b-12d3-a456-426614174009",
+              "linkedin_url": "https://linkedin.com/company/updated-example"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation deleteWebInfo",
+      "description": "Delete a web info by ID",
+      "equivalent": "DELETE",
+      "example": {
+        "request": {
+          "query": "mutation DeleteWebInfo($id: ID!) { deleteWebInfo(id: $id) }",
+          "variables": { "id": "123e4567-e89b-12d3-a456-426614174009" }
+        },
+        "response": {
+          "data": {
+            "deleteWebInfo": true
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation createEmail",
+      "description": "Create a new email",
+      "equivalent": "POST",
+      "example": {
+        "request": {
+          "query": "mutation CreateEmail($input: EmailInput!) { createEmail(input: $input) { id value type } }",
+          "variables": {
+            "input": {
+              "value": "contact@example.com",
+              "type": "generic",
+              "company_id": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          }
+        },
+        "response": {
+          "data": {
+            "createEmail": {
+              "id": "123e4567-e89b-12d3-a456-426614174010",
+              "value": "contact@example.com",
+              "type": "generic"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation updateEmail",
+      "description": "Update an existing email",
+      "equivalent": "PUT",
+      "example": {
+        "request": {
+          "query": "mutation UpdateEmail($id: ID!, $input: EmailInput!) { updateEmail(id: $id, input: $input) { id value } }",
+          "variables": {
+            "id": "123e4567-e89b-12d3-a456-426614174010",
+            "input": {
+              "value": "updated@example.com"
+            }
+          }
+        },
+        "response": {
+          "data": {
+            "updateEmail": {
+              "id": "123e4567-e89b-12d3-a456-426614174010",
+              "value": "updated@example.com"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation deleteEmail",
+      "description": "Delete an email by ID",
+      "equivalent": "DELETE",
+      "example": {
+        "request": {
+          "query": "mutation DeleteEmail($id: ID!) { deleteEmail(id: $id) }",
+          "variables": { "id": "123e4567-e89b-12d3-a456-426614174010" }
+        },
+        "response": {
+          "data": {
+            "deleteEmail": true
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation createAddress",
+      "description": "Create a new address",
+      "equivalent": "POST",
+      "example": {
+        "request": {
+          "query": "mutation CreateAddress($input: AddressInput!) { createAddress(input: $input) { id street city } }",
+          "variables": {
+            "input": {
+              "street": "123 Main St",
+              "city": "Paris"
+            }
+          }
+        },
+        "response": {
+          "data": {
+            "createAddress": {
+              "id": "123e4567-e89b-12d3-a456-426614174011",
+              "street": "123 Main St",
+              "city": "Paris"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation updateAddress",
+      "description": "Update an existing address",
+      "equivalent": "PUT",
+      "example": {
+        "request": {
+          "query": "mutation UpdateAddress($id: ID!, $input: AddressInput!) { updateAddress(id: $id, input: $input) { id street } }",
+          "variables": {
+            "id": "123e4567-e89b-12d3-a456-426614174011",
+            "input": {
+              "street": "456 Main St"
+            }
+          }
+        },
+        "response": {
+          "data": {
+            "updateAddress": {
+              "id": "123e4567-e89b-12d3-a456-426614174011",
+              "street": "456 Main St"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation deleteAddress",
+      "description": "Delete an address by ID",
+      "equivalent": "DELETE",
+      "example": {
+        "request": {
+          "query": "mutation DeleteAddress($id: ID!) { deleteAddress(id: $id) }",
+          "variables": { "id": "123e4567-e89b-12d3-a456-426614174011" }
+        },
+        "response": {
+          "data": {
+            "deleteAddress": true
+          }
+        }
+      }
+    }
+  ]
+}

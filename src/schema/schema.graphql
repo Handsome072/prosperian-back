@@ -1,0 +1,414 @@
+scalar Date
+scalar DateTime
+
+type Company {
+  id: ID!
+  registration_number: String!
+  full_registration_number: String!
+  vat_number: String
+  name: String!
+  business_name: String
+  creation_date: Date
+  status: String
+  capital: Float
+  establishments_count: Int
+  last_legal_update: Date
+  establishments: [Establishment!]
+  officers: [Officer!]
+  beneficial_owners: [BeneficialOwner!]
+  financial_statements: [FinancialStatement!]
+  risk_assessment: RiskAssessment
+  bodacc_notices: [BodaccNotice!]
+  legal_acts: [LegalAct!]
+  web_info: WebInfo
+  emails: [Email!]
+}
+
+type Address {
+  id: ID!
+  street: String
+  postal_code: String
+  city: String
+  country_code: String
+  lat: Float
+  lng: Float
+}
+
+type Establishment {
+  id: ID!
+  siret: String!
+  is_head_office: Boolean!
+  creation_date: Date
+  status: String
+  address_id: ID
+  company_id: ID!
+  address: Address
+  company: Company
+}
+
+type Officer {
+  id: ID!
+  first_name: String
+  last_name: String
+  role: String
+  start_date: Date
+  end_date: Date
+  registration_number: String
+  is_company: Boolean
+  company_id: ID!
+  company: Company
+}
+
+type BeneficialOwner {
+  id: ID!
+  first_name: String
+  last_name: String
+  birth_date: String
+  direct_shares_pct: Float
+  indirect_shares_pct: Float
+  voting_rights_pct: Float
+  company_id: ID!
+  company: Company
+}
+
+type FinancialStatement {
+  id: ID!
+  year: Int!
+  sales: Float
+  profit: Float
+  staff: Int
+  closing_date: Date
+  is_estimated: Boolean
+  company_id: ID!
+  company: Company
+}
+
+type RiskAssessment {
+  id: ID!
+  risk_level: Int!
+  description: String
+  collective_procedure: Boolean
+  company_id: ID!
+  company: Company
+}
+
+type BodaccNotice {
+  id: ID!
+  type: String
+  parution_date: Date
+  number: String
+  description: String
+  company_id: ID!
+  company: Company
+}
+
+type LegalAct {
+  id: ID!
+  date: Date
+  type: String
+  description: String
+  company_id: ID!
+  company: Company
+}
+
+type WebInfo {
+  id: ID!
+  logos: [String!]
+  websites: [String!]
+  linkedin_url: String
+  twitter_url: String
+  facebook_url: String
+  instagram_url: String
+  company_id: ID!
+  company: Company
+}
+
+type Email {
+  id: ID!
+  value: String!
+  type: String!
+  test_result: String
+  test_date: Date
+  company_id: ID!
+  company: Company
+}
+
+type File {
+  id: ID!
+  file_name: String
+  upload_date: DateTime
+  row_count: Int
+  enriched_row_count: Int
+  status: String
+  first_name: String
+  last_name: String
+  gender: String
+  title: String
+  email: String
+  phone: String
+  all_phones: String
+  company_name: String
+  company_cleaned_name: String
+  company_website: String
+  company_domain: String
+  linkedin_profile_url: String
+  company_linkedin_id_url: String
+  location: String
+  company_location: String
+  company_industry: String
+  employee_count: String
+  employee_range: String
+  revenue: String
+  headquarters: String
+  year_founded: String
+  linkedin_headline: String
+  linkedin_connections_count: Int
+  start_date_job: String
+  start_date_company: String
+  years_in_position: Int
+  months_in_position: Int
+  years_in_company: Int
+  months_in_company: Int
+  current_positions_count: Int
+  title_description: String
+  summary: String
+  full_name: String
+  sales_navigator_profile_url: String
+  linkedin_id_url: String
+  profile_image_url: String
+  company_profile_picture: String
+  company_description: String
+  company_linkedin: String
+  connection_degree: String
+  is_premium_linkedin: Boolean
+  is_open_profile_linkedin: Boolean
+  is_open_to_work_linkedin: Boolean
+  email_alt: String
+  phone_alt: String
+  all_phones_alt: String
+  company_id: ID
+  company: Company
+}
+
+input CompanyInput {
+  registration_number: String!
+  full_registration_number: String!
+  vat_number: String
+  name: String!
+  business_name: String
+  creation_date: Date
+  status: String
+  capital: Float
+  establishments_count: Int
+  last_legal_update: Date
+}
+
+input EstablishmentInput {
+  siret: String!
+  is_head_office: Boolean!
+  creation_date: Date
+  status: String
+  address_id: ID
+  company_id: ID!
+}
+
+input OfficerInput {
+  first_name: String
+  last_name: String
+  role: String
+  start_date: Date
+  end_date: Date
+  registration_number: String
+  is_company: Boolean
+  company_id: ID!
+}
+
+input BeneficialOwnerInput {
+  first_name: String
+  last_name: String
+  birth_date: String
+  direct_shares_pct: Float
+  indirect_shares_pct: Float
+  voting_rights_pct: Float
+  company_id: ID!
+}
+
+input FinancialStatementInput {
+  year: Int!
+  sales: Float
+  profit: Float
+  staff: Int
+  closing_date: Date
+  is_estimated: Boolean
+  company_id: ID!
+}
+
+input RiskAssessmentInput {
+  risk_level: Int!
+  description: String
+  collective_procedure: Boolean
+  company_id: ID!
+}
+
+input BodaccNoticeInput {
+  type: String
+  parution_date: Date
+  number: String
+  description: String
+  company_id: ID!
+}
+
+input LegalActInput {
+  date: Date
+  type: String
+  description: String
+  company_id: ID!
+}
+
+input WebInfoInput {
+  logos: [String!]
+  websites: [String!]
+  linkedin_url: String
+  twitter_url: String
+  facebook_url: String
+  instagram_url: String
+  company_id: ID!
+}
+
+input EmailInput {
+  value: String!
+  type: String!
+  test_result: String
+  test_date: Date
+  company_id: ID!
+}
+
+input AddressInput {
+  street: String
+  postal_code: String
+  city: String
+  country_code: String
+  lat: Float
+  lng: Float
+}
+
+input FileInput {
+  file_name: String
+  upload_date: DateTime
+  row_count: Int
+  enriched_row_count: Int
+  status: String
+  first_name: String
+  last_name: String
+  gender: String
+  title: String
+  email: String
+  phone: String
+  all_phones: String
+  company_name: String
+  company_cleaned_name: String
+  company_website: String
+  company_domain: String
+  linkedin_profile_url: String
+  company_linkedin_id_url: String
+  location: String
+  company_location: String
+  company_industry: String
+  employee_count: String
+  employee_range: String
+  revenue: String
+  headquarters: String
+  year_founded: String
+  linkedin_headline: String
+  linkedin_connections_count: Int
+  start_date_job: String
+  start_date_company: String
+  years_in_position: Int
+  months_in_position: Int
+  years_in_company: Int
+  months_in_company: Int
+  current_positions_count: Int
+  title_description: String
+  summary: String
+  full_name: String
+  sales_navigator_profile_url: String
+  linkedin_id_url: String
+  profile_image_url: String
+  company_profile_picture: String
+  company_description: String
+  company_linkedin: String
+  connection_degree: String
+  is_premium_linkedin: Boolean
+  is_open_profile_linkedin: Boolean
+  is_open_to_work_linkedin: Boolean
+  email_alt: String
+  phone_alt: String
+  all_phones_alt: String
+  company_id: ID
+}
+
+type Query {
+  companies: [Company!]!
+  company(id: ID!): Company
+  establishments: [Establishment!]!
+  establishment(id: ID!): Establishment
+  officers: [Officer!]!
+  officer(id: ID!): Officer
+  files: [File!]!
+  file(id: ID!): File
+  beneficialOwners: [BeneficialOwner!]!
+  beneficialOwner(id: ID!): BeneficialOwner
+  financialStatements: [FinancialStatement!]!
+  financialStatement(id: ID!): FinancialStatement
+  riskAssessments: [RiskAssessment!]!
+  riskAssessment(id: ID!): RiskAssessment
+  bodaccNotices: [BodaccNotice!]!
+  bodaccNotice(id: ID!): BodaccNotice
+  legalActs: [LegalAct!]!
+  legalAct(id: ID!): LegalAct
+  webInfos: [WebInfo!]!
+  webInfo(id: ID!): WebInfo
+  emails: [Email!]!
+  email(id: ID!): Email
+  addresses: [Address!]!
+  address(id: ID!): Address
+}
+
+type Mutation {
+  createCompany(input: CompanyInput!): Company!
+  updateCompany(id: ID!, input: CompanyInput!): Company!
+  deleteCompany(id: ID!): Boolean!
+  createEstablishment(input: EstablishmentInput!): Establishment!
+  updateEstablishment(id: ID!, input: EstablishmentInput!): Establishment!
+  deleteEstablishment(id: ID!): Boolean!
+  createOfficer(input: OfficerInput!): Officer!
+  updateOfficer(id: ID!, input: OfficerInput!): Officer!
+  deleteOfficer(id: ID!): Boolean!
+  createFile(input: FileInput!): File!
+  updateFile(id: ID!, input: FileInput!): File!
+  deleteFile(id: ID!): Boolean!
+  createBeneficialOwner(input: BeneficialOwnerInput!): BeneficialOwner!
+  updateBeneficialOwner(id: ID!, input: BeneficialOwnerInput!): BeneficialOwner!
+  deleteBeneficialOwner(id: ID!): Boolean!
+  createFinancialStatement(input: FinancialStatementInput!): FinancialStatement!
+  updateFinancialStatement(id: ID!, input: FinancialStatementInput!): FinancialStatement!
+  deleteFinancialStatement(id: ID!): Boolean!
+  createRiskAssessment(input: RiskAssessmentInput!): RiskAssessment!
+  updateRiskAssessment(id: ID!, input: RiskAssessmentInput!): RiskAssessment!
+  deleteRiskAssessment(id: ID!): Boolean!
+  createBodaccNotice(input: BodaccNoticeInput!): BodaccNotice!
+  updateBodaccNotice(id: ID!, input: BodaccNoticeInput!): BodaccNotice!
+  deleteBodaccNotice(id: ID!): Boolean!
+  createLegalAct(input: LegalActInput!): LegalAct!
+  updateLegalAct(id: ID!, input: LegalActInput!): LegalAct!
+  deleteLegalAct(id: ID!): Boolean!
+  createWebInfo(input: WebInfoInput!): WebInfo!
+  updateWebInfo(id: ID!, input: WebInfoInput!): WebInfo!
+  deleteWebInfo(id: ID!): Boolean!
+  createEmail(input: EmailInput!): Email!
+  updateEmail(id: ID!, input: EmailInput!): Email!
+  deleteEmail(id: ID!): Boolean!
+  createAddress(input: AddressInput!): Address!
+  updateAddress(id: ID!, input: AddressInput!): Address!
+  deleteAddress(id: ID!): Boolean!
+}
