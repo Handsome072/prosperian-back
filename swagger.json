@@ -122,6 +122,141 @@
           }
         }
       }
+    },
+    "/api/companies": {
+      "get": { "summary": "Get all companies", "tags": ["Company"], "responses": { "200": { "description": "List of companies", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Company" } } } } } } },
+      "post": { "summary": "Create a new company", "tags": ["Company"], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CompanyInput" } } } }, "responses": { "201": { "description": "Company created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Company" } } } }, "400": { "description": "Invalid input" } } }
+    },
+    "/api/companies/{id}": {
+      "get": { "summary": "Get a company by ID", "tags": ["Company"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "200": { "description": "Company found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Company" } } } }, "404": { "description": "Company not found" } } },
+      "put": { "summary": "Update a company by ID", "tags": ["Company"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CompanyInput" } } } }, "responses": { "200": { "description": "Company updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Company" } } } }, "400": { "description": "Invalid input" }, "404": { "description": "Company not found" } } },
+      "delete": { "summary": "Delete a company by ID", "tags": ["Company"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "204": { "description": "Company deleted" }, "404": { "description": "Company not found" } } }
+    },
+    "/api/establishments": {
+      "get": { "summary": "Get all establishments", "tags": ["Establishment"], "responses": { "200": { "description": "List of establishments", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Establishment" } } } } } } },
+      "post": { "summary": "Create a new establishment", "tags": ["Establishment"], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EstablishmentInput" } } } }, "responses": { "201": { "description": "Establishment created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Establishment" } } } }, "400": { "description": "Invalid input" } } }
+    },
+    "/api/establishments/{id}": {
+      "get": { "summary": "Get an establishment by ID", "tags": ["Establishment"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "200": { "description": "Establishment found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Establishment" } } } }, "404": { "description": "Establishment not found" } } },
+      "put": { "summary": "Update an establishment by ID", "tags": ["Establishment"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EstablishmentInput" } } } }, "responses": { "200": { "description": "Establishment updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Establishment" } } } }, "400": { "description": "Invalid input" }, "404": { "description": "Establishment not found" } } },
+      "delete": { "summary": "Delete an establishment by ID", "tags": ["Establishment"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "204": { "description": "Establishment deleted" }, "404": { "description": "Establishment not found" } } }
+    },
+    "/api/officers": {
+      "get": { "summary": "Get all officers", "tags": ["Officer"], "responses": { "200": { "description": "List of officers", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Officer" } } } } } } },
+      "post": { "summary": "Create a new officer", "tags": ["Officer"], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OfficerInput" } } } }, "responses": { "201": { "description": "Officer created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Officer" } } } }, "400": { "description": "Invalid input" } } }
+    },
+    "/api/officers/{id}": {
+      "get": { "summary": "Get an officer by ID", "tags": ["Officer"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "200": { "description": "Officer found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Officer" } } } }, "404": { "description": "Officer not found" } } },
+      "put": { "summary": "Update an officer by ID", "tags": ["Officer"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OfficerInput" } } } }, "responses": { "200": { "description": "Officer updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Officer" } } } }, "400": { "description": "Invalid input" }, "404": { "description": "Officer not found" } } },
+      "delete": { "summary": "Delete an officer by ID", "tags": ["Officer"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "204": { "description": "Officer deleted" }, "404": { "description": "Officer not found" } } }
+    },
+    "/api/files": {
+      "get": { "summary": "Get all files", "tags": ["File"], "responses": { "200": { "description": "List of files", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/File" } } } } } } },
+      "post": { "summary": "Create a new file", "tags": ["File"], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FileInput" } } } }, "responses": { "201": { "description": "File created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/File" } } } }, "400": { "description": "Invalid input" } } }
+    },
+    "/api/files/{id}": {
+      "get": { "summary": "Get a file by ID", "tags": ["File"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "200": { "description": "File found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/File" } } } }, "404": { "description": "File not found" } } },
+      "put": { "summary": "Update a file by ID", "tags": ["File"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FileInput" } } } }, "responses": { "200": { "description": "File updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/File" } } } }, "400": { "description": "Invalid input" }, "404": { "description": "File not found" } } },
+      "delete": { "summary": "Delete a file by ID", "tags": ["File"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "204": { "description": "File deleted" }, "404": { "description": "File not found" } } }
+    },
+    "/api/users": {
+      "get": { "summary": "Get all users", "tags": ["User"], "responses": { "200": { "description": "List of users", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/User" } } } } } } },
+      "post": { "summary": "Create a new user", "tags": ["User"], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserInput" } } } }, "responses": { "201": { "description": "User created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } } }, "400": { "description": "Invalid input" } } }
+    },
+    "/api/users/{id}": {
+      "get": { "summary": "Get a user by ID", "tags": ["User"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "200": { "description": "User found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } } }, "404": { "description": "User not found" } } },
+      "put": { "summary": "Update a user by ID", "tags": ["User"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserInput" } } } }, "responses": { "200": { "description": "User updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } } }, "400": { "description": "Invalid input" }, "404": { "description": "User not found" } } },
+      "delete": { "summary": "Delete a user by ID", "tags": ["User"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "204": { "description": "User deleted" }, "404": { "description": "User not found" } } }
+    },
+    "/api/beneficial_owners": {
+      "get": { "summary": "Get all beneficial owners", "tags": ["BeneficialOwner"], "responses": { "200": { "description": "List of beneficial owners", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/BeneficialOwner" } } } } } } },
+      "post": { "summary": "Create a new beneficial owner", "tags": ["BeneficialOwner"], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BeneficialOwnerInput" } } } }, "responses": { "201": { "description": "Beneficial owner created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BeneficialOwner" } } } }, "400": { "description": "Invalid input" } } }
+    },
+    "/api/beneficial_owners/{id}": {
+      "get": { "summary": "Get a beneficial owner by ID", "tags": ["BeneficialOwner"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "200": { "description": "Beneficial owner found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BeneficialOwner" } } } }, "404": { "description": "Beneficial owner not found" } } },
+      "put": { "summary": "Update a beneficial owner by ID", "tags": ["BeneficialOwner"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BeneficialOwnerInput" } } } }, "responses": { "200": { "description": "Beneficial owner updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BeneficialOwner" } } } }, "400": { "description": "Invalid input" }, "404": { "description": "Beneficial owner not found" } } },
+      "delete": { "summary": "Delete a beneficial owner by ID", "tags": ["BeneficialOwner"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "204": { "description": "Beneficial owner deleted" }, "404": { "description": "Beneficial owner not found" } } }
+    },
+    "/api/financial_statements": {
+      "get": { "summary": "Get all financial statements", "tags": ["FinancialStatement"], "responses": { "200": { "description": "List of financial statements", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/FinancialStatement" } } } } } } },
+      "post": { "summary": "Create a new financial statement", "tags": ["FinancialStatement"], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FinancialStatementInput" } } } }, "responses": { "201": { "description": "Financial statement created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FinancialStatement" } } } }, "400": { "description": "Invalid input" } } }
+    },
+    "/api/financial_statements/{id}": {
+      "get": { "summary": "Get a financial statement by ID", "tags": ["FinancialStatement"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "200": { "description": "Financial statement found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FinancialStatement" } } } }, "404": { "description": "Financial statement not found" } } },
+      "put": { "summary": "Update a financial statement by ID", "tags": ["FinancialStatement"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FinancialStatementInput" } } } }, "responses": { "200": { "description": "Financial statement updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FinancialStatement" } } } }, "400": { "description": "Invalid input" }, "404": { "description": "Financial statement not found" } } },
+      "delete": { "summary": "Delete a financial statement by ID", "tags": ["FinancialStatement"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "204": { "description": "Financial statement deleted" }, "404": { "description": "Financial statement not found" } } }
+    },
+    "/api/risk_assessments": {
+      "get": { "summary": "Get all risk assessments", "tags": ["RiskAssessment"], "responses": { "200": { "description": "List of risk assessments", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/RiskAssessment" } } } } } } },
+      "post": { "summary": "Create a new risk assessment", "tags": ["RiskAssessment"], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RiskAssessmentInput" } } } }, "responses": { "201": { "description": "Risk assessment created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RiskAssessment" } } } }, "400": { "description": "Invalid input" } } }
+    },
+    "/api/risk_assessments/{id}": {
+      "get": { "summary": "Get a risk assessment by ID", "tags": ["RiskAssessment"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "200": { "description": "Risk assessment found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RiskAssessment" } } } }, "404": { "description": "Risk assessment not found" } } },
+      "put": { "summary": "Update a risk assessment by ID", "tags": ["RiskAssessment"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RiskAssessmentInput" } } } }, "responses": { "200": { "description": "Risk assessment updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RiskAssessment" } } } }, "400": { "description": "Invalid input" }, "404": { "description": "Risk assessment not found" } } },
+      "delete": { "summary": "Delete a risk assessment by ID", "tags": ["RiskAssessment"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "204": { "description": "Risk assessment deleted" }, "404": { "description": "Risk assessment not found" } } }
+    },
+    "/api/bodacc_notices": {
+      "get": { "summary": "Get all BODACC notices", "tags": ["BodaccNotice"], "responses": { "200": { "description": "List of BODACC notices", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/BodaccNotice" } } } } } } },
+      "post": { "summary": "Create a new BODACC notice", "tags": ["BodaccNotice"], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BodaccNoticeInput" } } } }, "responses": { "201": { "description": "BODACC notice created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BodaccNotice" } } } }, "400": { "description": "Invalid input" } } }
+    },
+    "/api/bodacc_notices/{id}": {
+      "get": { "summary": "Get a BODACC notice by ID", "tags": ["BodaccNotice"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "200": { "description": "BODACC notice found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BodaccNotice" } } } }, "404": { "description": "BODACC notice not found" } } },
+      "put": { "summary": "Update a BODACC notice by ID", "tags": ["BodaccNotice"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BodaccNoticeInput" } } } }, "responses": { "200": { "description": "BODACC notice updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BodaccNotice" } } } }, "400": { "description": "Invalid input" }, "404": { "description": "BODACC notice not found" } } },
+      "delete": { "summary": "Delete a BODACC notice by ID", "tags": ["BodaccNotice"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "204": { "description": "BODACC notice deleted" }, "404": { "description": "BODACC notice not found" } } }
+    },
+    "/api/legal_acts": {
+      "get": { "summary": "Get all legal acts", "tags": ["LegalAct"], "responses": { "200": { "description": "List of legal acts", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/LegalAct" } } } } } } },
+      "post": { "summary": "Create a new legal act", "tags": ["LegalAct"], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LegalActInput" } } } }, "responses": { "201": { "description": "Legal act created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LegalAct" } } } }, "400": { "description": "Invalid input" } } }
+    },
+    "/api/legal_acts/{id}": {
+      "get": { "summary": "Get a legal act by ID", "tags": ["LegalAct"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "200": { "description": "Legal act found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LegalAct" } } } }, "404": { "description": "Legal act not found" } } },
+      "put": { "summary": "Update a legal act by ID", "tags": ["LegalAct"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LegalActInput" } } } }, "responses": { "200": { "description": "Legal act updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LegalAct" } } } }, "400": { "description": "Invalid input" }, "404": { "description": "Legal act not found" } } },
+      "delete": { "summary": "Delete a legal act by ID", "tags": ["LegalAct"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "204": { "description": "Legal act deleted" }, "404": { "description": "Legal act not found" } } }
+    },
+    "/api/web_infos": {
+      "get": { "summary": "Get all web infos", "tags": ["WebInfo"], "responses": { "200": { "description": "List of web infos", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/WebInfo" } } } } } } },
+      "post": { "summary": "Create a new web info", "tags": ["WebInfo"], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WebInfoInput" } } } }, "responses": { "201": { "description": "Web info created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WebInfo" } } } }, "400": { "description": "Invalid input" } } }
+    },
+    "/api/web_infos/{id}": {
+      "get": { "summary": "Get a web info by ID", "tags": ["WebInfo"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "200": { "description": "Web info found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WebInfo" } } } }, "404": { "description": "Web info not found" } } },
+      "put": { "summary": "Update a web info by ID", "tags": ["WebInfo"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WebInfoInput" } } } }, "responses": { "200": { "description": "Web info updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WebInfo" } } } }, "400": { "description": "Invalid input" }, "404": { "description": "Web info not found" } } },
+      "delete": { "summary": "Delete a web info by ID", "tags": ["WebInfo"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "204": { "description": "Web info deleted" }, "404": { "description": "Web info not found" } } }
+    },
+    "/api/emails": {
+      "get": { "summary": "Get all emails", "tags": ["Email"], "responses": { "200": { "description": "List of emails", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Email" } } } } } } },
+      "post": { "summary": "Create a new email", "tags": ["Email"], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EmailInput" } } } }, "responses": { "201": { "description": "Email created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Email" } } } }, "400": { "description": "Invalid input" } } }
+    },
+    "/api/emails/{id}": {
+      "get": { "summary": "Get an email by ID", "tags": ["Email"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "200": { "description": "Email found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Email" } } } }, "404": { "description": "Email not found" } } },
+      "put": { "summary": "Update an email by ID", "tags": ["Email"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EmailInput" } } } }, "responses": { "200": { "description": "Email updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Email" } } } }, "400": { "description": "Invalid input" }, "404": { "description": "Email not found" } } },
+      "delete": { "summary": "Delete an email by ID", "tags": ["Email"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "204": { "description": "Email deleted" }, "404": { "description": "Email not found" } } }
+    },
+    "/api/addresses": {
+      "get": { "summary": "Get all addresses", "tags": ["Address"], "responses": { "200": { "description": "List of addresses", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Address" } } } } } } },
+      "post": { "summary": "Create a new address", "tags": ["Address"], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AddressInput" } } } }, "responses": { "201": { "description": "Address created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Address" } } } }, "400": { "description": "Invalid input" } } }
+    },
+    "/api/addresses/{id}": {
+      "get": { "summary": "Get an address by ID", "tags": ["Address"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "200": { "description": "Address found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Address" } } } }, "404": { "description": "Address not found" } } },
+      "put": { "summary": "Update an address by ID", "tags": ["Address"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AddressInput" } } } }, "responses": { "200": { "description": "Address updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Address" } } } }, "400": { "description": "Invalid input" }, "404": { "description": "Address not found" } } },
+      "delete": { "summary": "Delete an address by ID", "tags": ["Address"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "204": { "description": "Address deleted" }, "404": { "description": "Address not found" } } }
+    },
+    "/api/subscriptions": {
+      "get": { "summary": "Get all subscriptions", "tags": ["Subscription"], "responses": { "200": { "description": "List of subscriptions", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Subscription" } } } } } } },
+      "post": { "summary": "Create a new subscription", "tags": ["Subscription"], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SubscriptionInput" } } } }, "responses": { "201": { "description": "Subscription created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Subscription" } } } }, "400": { "description": "Invalid input" } } }
+    },
+    "/api/subscriptions/{id}": {
+      "get": { "summary": "Get a subscription by ID", "tags": ["Subscription"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "200": { "description": "Subscription found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Subscription" } } } }, "404": { "description": "Subscription not found" } } },
+      "put": { "summary": "Update a subscription by ID", "tags": ["Subscription"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SubscriptionInput" } } } }, "responses": { "200": { "description": "Subscription updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Subscription" } } } }, "400": { "description": "Invalid input" }, "404": { "description": "Subscription not found" } } },
+      "delete": { "summary": "Delete a subscription by ID", "tags": ["Subscription"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "204": { "description": "Subscription deleted" }, "404": { "description": "Subscription not found" } } }
+    },
+    "/api/credit_logs": {
+      "get": { "summary": "Get all credit logs", "tags": ["CreditLog"], "responses": { "200": { "description": "List of credit logs", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/CreditLog" } } } } } } },
+      "post": { "summary": "Create a new credit log", "tags": ["CreditLog"], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreditLogInput" } } } }, "responses": { "201": { "description": "Credit log created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreditLog" } } } }, "400": { "description": "Invalid input" } } }
+    },
+    "/api/credit_logs/{id}": {
+      "get": { "summary": "Get a credit log by ID", "tags": ["CreditLog"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "200": { "description": "Credit log found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreditLog" } } } }, "404": { "description": "Credit log not found" } } },
+      "put": { "summary": "Update a credit log by ID", "tags": ["CreditLog"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreditLogInput" } } } }, "responses": { "200": { "description": "Credit log updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreditLog" } } } }, "400": { "description": "Invalid input" }, "404": { "description": "Credit log not found" } } },
+      "delete": { "summary": "Delete a credit log by ID", "tags": ["CreditLog"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "204": { "description": "Credit log deleted" }, "404": { "description": "Credit log not found" } } }
     }
   },
   "components": {
@@ -583,6 +718,29 @@
           "company_id": { "type": "string", "format": "uuid", "nullable": true, "description": "Reference to company" }
         },
         "required": []
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "description": "Unique identifier (UUID)" },
+          "name": { "type": "string", "description": "User's name" },
+          "email": { "type": "string", "description": "User's email" },
+          "role": { "type": "string", "description": "User's role" },
+          "status": { "type": "string", "description": "User's status" },
+          "created_at": { "type": "string", "format": "date-time", "description": "Date and time user was created" },
+          "updated_at": { "type": "string", "format": "date-time", "description": "Date and time user was last updated" }
+        },
+        "required": ["id", "name", "email", "role", "status"]
+      },
+      "UserInput": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "description": "User's name" },
+          "email": { "type": "string", "description": "User's email" },
+          "role": { "type": "string", "description": "User's role" },
+          "status": { "type": "string", "description": "User's status" }
+        },
+        "required": ["name", "email", "role", "status"]
       }
     }
   },
@@ -1883,6 +2041,81 @@
         "response": {
           "data": {
             "deleteAddress": true
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation createUser",
+      "description": "Create a new user",
+      "equivalent": "POST",
+      "example": {
+        "request": {
+          "query": "mutation CreateUser($input: UserInput!) { createUser(input: $input) { id name email role status } }",
+          "variables": {
+            "input": {
+              "name": "John Doe",
+              "email": "john@example.com",
+              "role": "Admin",
+              "status": "Active"
+            }
+          }
+        },
+        "response": {
+          "data": {
+            "createUser": {
+              "id": "123e4567-e89b-12d3-a456-426614174012",
+              "name": "John Doe",
+              "email": "john@example.com",
+              "role": "Admin",
+              "status": "Active"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation updateUser",
+      "description": "Update an existing user",
+      "equivalent": "PUT",
+      "example": {
+        "request": {
+          "query": "mutation UpdateUser($id: ID!, $input: UserInput!) { updateUser(id: $id, input: $input) { id name email role status } }",
+          "variables": {
+            "id": "123e4567-e89b-12d3-a456-426614174012",
+            "input": {
+              "name": "John Doe",
+              "email": "john@example.com",
+              "role": "Admin",
+              "status": "Active"
+            }
+          }
+        },
+        "response": {
+          "data": {
+            "updateUser": {
+              "id": "123e4567-e89b-12d3-a456-426614174012",
+              "name": "John Doe",
+              "email": "john@example.com",
+              "role": "Admin",
+              "status": "Active"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "mutation deleteUser",
+      "description": "Delete a user by ID",
+      "equivalent": "DELETE",
+      "example": {
+        "request": {
+          "query": "mutation DeleteUser($id: ID!) { deleteUser(id: $id) }",
+          "variables": { "id": "123e4567-e89b-12d3-a456-426614174012" }
+        },
+        "response": {
+          "data": {
+            "deleteUser": true
           }
         }
       }

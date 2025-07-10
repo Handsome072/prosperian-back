@@ -6,6 +6,21 @@ const { resolve } = require('path');
 const express = require('express');
 const swaggerUi = require('swagger-ui-express');
 const resolvers = require('./resolvers');
+const companyRoutes = require('./routes/company');
+const establishmentRoutes = require('./routes/establishment');
+const officerRoutes = require('./routes/officer');
+const beneficialOwnerRoutes = require('./routes/beneficial_owner');
+const financialStatementRoutes = require('./routes/financial_statement');
+const riskAssessmentRoutes = require('./routes/risk_assessment');
+const bodaccNoticeRoutes = require('./routes/bodacc_notice');
+const legalActRoutes = require('./routes/legal_act');
+const webInfoRoutes = require('./routes/web_info');
+const emailRoutes = require('./routes/email');
+const addressRoutes = require('./routes/address');
+const userRoutes = require('./routes/user');
+const fileRoutes = require('./routes/file');
+const subscriptionRoutes = require('./routes/subscription');
+const creditLogRoutes = require('./routes/credit_log');
 require('dotenv').config();
 
 const typeDefs = readFileSync(resolve(__dirname, './schema/schema.graphql'), 'utf8');
@@ -27,6 +42,21 @@ server.start().then(() => {
 // Configuration de Swagger
 const swaggerDocument = require('../swagger.json'); // Assurez-vous que swagger.json existe
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use('/api/companies', companyRoutes);
+app.use('/api/establishments', establishmentRoutes);
+app.use('/api/officers', officerRoutes);
+app.use('/api/beneficial-owners', beneficialOwnerRoutes);
+app.use('/api/financial-statements', financialStatementRoutes);
+app.use('/api/risk-assessments', riskAssessmentRoutes);
+app.use('/api/bodacc-notices', bodaccNoticeRoutes);
+app.use('/api/legal-acts', legalActRoutes);
+app.use('/api/web-infos', webInfoRoutes);
+app.use('/api/emails', emailRoutes);
+app.use('/api/addresses', addressRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/files', fileRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/credit-logs', creditLogRoutes);
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
