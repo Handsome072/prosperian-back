@@ -22,6 +22,7 @@ const fileRoutes = require('./routes/file');
 const subscriptionRoutes = require('./routes/subscription');
 const creditLogRoutes = require('./routes/credit_log');
 const prontoRoutes = require('./routes/pronto');
+const prontoWorkflowRoutes = require('./routes/pronto-workflows');
 require('dotenv').config();
 
 const typeDefs = readFileSync(resolve(__dirname, './schema/schema.graphql'), 'utf8');
@@ -59,6 +60,7 @@ app.use('/api/files', fileRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/credit-logs', creditLogRoutes);
 app.use('/api/pronto', prontoRoutes);
+app.use('/api/pronto-workflows', prontoWorkflowRoutes);
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {

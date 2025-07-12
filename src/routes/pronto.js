@@ -104,6 +104,26 @@ router.get('/searches/:id', async (req, res) => {
   }
 });
 
+// GET - Retrieve leads from a specific search
+router.get('/searches/:id/leads', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { page = 1, limit = 100 } = req.query;
+    
+    const response = await prontoClient.post('/leads/extract', {
+      search_id: id,
+      page: parseInt(page),
+      limit: parseInt(limit)
+    });
+    
+    res.json(response.data);
+  } catch (error) {
+    res.status(error.response?.status || 500).json({
+      error: error.response?.data || error.message
+    });
+  }
+});
+
 // ===== ACCOUNTS ENDPOINTS =====
 
 // POST - Profiles in a company

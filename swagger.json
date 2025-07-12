@@ -588,6 +588,88 @@
         } 
       }
     },
+    "/api/pronto/searches/{id}/leads": {
+      "get": { 
+        "summary": "Retrieve leads from a specific search", 
+        "description": "Retrieves all leads/contacts from a specific saved search with pagination support",
+        "tags": ["Pronto"], 
+        "parameters": [ 
+          { 
+            "name": "id", 
+            "in": "path", 
+            "required": true, 
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "UUID of the search to retrieve leads from"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 1, "minimum": 1 },
+            "description": "Page number for pagination"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 100, "minimum": 1, "maximum": 1000 },
+            "description": "Number of leads per page"
+          }
+        ], 
+        "responses": { 
+          "200": { 
+            "description": "Leads from the search", 
+            "content": { 
+              "application/json": { 
+                "schema": { 
+                  "type": "object",
+                  "properties": {
+                    "leads": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ProntoContact"
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "page": { "type": "integer", "description": "Current page number" },
+                        "limit": { "type": "integer", "description": "Number of items per page" },
+                        "total": { "type": "integer", "description": "Total number of leads" },
+                        "pages": { "type": "integer", "description": "Total number of pages" }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "leads": [
+                    {
+                      "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                      "first_name": "John",
+                      "last_name": "Doe",
+                      "email": "john.doe@company.com",
+                      "job_title": "CEO",
+                      "company": "Tech Corp",
+                      "linkedin_url": "https://linkedin.com/in/johndoe",
+                      "phone": "+33123456789"
+                    }
+                  ],
+                  "pagination": {
+                    "page": 1,
+                    "limit": 100,
+                    "total": 60,
+                    "pages": 1
+                  }
+                }
+              } 
+            } 
+          }, 
+          "404": { "description": "Search not found" },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      }
+    },
     "/api/pronto/accounts/profiles": {
       "post": { 
         "summary": "Get profiles in a company", 
@@ -1687,6 +1769,1246 @@
           "500": { "description": "Internal server error" }
         } 
       }
+    },
+    "/api/pronto-workflows/all-searches-complete": {
+      "get": { 
+        "summary": "Get all searches with complete data", 
+        "description": "Automated workflow that combines all three endpoints: get all searches, get search details, and get leads for each search. No parameters needed - just call this endpoint to get everything!",
+        "tags": ["Pronto Workflows"], 
+        "parameters": [
+          {
+            "name": "include_leads",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": true },
+            "description": "Whether to include leads for each search"
+          },
+          {
+            "name": "leads_per_search",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 50, "minimum": 1, "maximum": 200 },
+            "description": "Number of leads to extract per search"
+          },
+          {
+            "name": "include_enrichment",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": false },
+            "description": "Whether to enrich lead data with additional information"
+          },
+          {
+            "name": "max_searches",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 20, "minimum": 1, "maximum": 50 },
+            "description": "Maximum number of searches to process (for performance)"
+          }
+        ], 
+        "responses": { 
+          "200": { 
+            "description": "Complete searches data with leads", 
+            "content": { 
+              "application/json": { 
+                "schema": { 
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "description": "Workflow success status" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "workflow": { "type": "string", "description": "Workflow name" },
+                        "timestamp": { "type": "string", "format": "date-time", "description": "Execution timestamp" },
+                        "searches": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": { "type": "string", "format": "uuid" },
+                              "name": { "type": "string" },
+                              "leads_count": { "type": "integer" },
+                              "created_at": { "type": "string", "format": "date-time" },
+                              "details": { "$ref": "#/components/schemas/ProntoSearch" },
+                              "leads": {
+                                "type": "array",
+                                "items": {
+                                  "$ref": "#/components/schemas/ProntoContact"
+                                }
+                              },
+                              "leads_pagination": {
+                                "type": "object",
+                                "properties": {
+                                  "page": { "type": "integer" },
+                                  "limit": { "type": "integer" },
+                                  "total": { "type": "integer" },
+                                  "pages": { "type": "integer" }
+                                }
+                              },
+                              "processed": { "type": "boolean" },
+                              "error": { "type": "string" }
+                            }
+                          }
+                        },
+                        "total_searches": { "type": "integer", "description": "Total number of searches found" },
+                        "total_leads": { "type": "integer", "description": "Total number of leads extracted" },
+                        "processing_time": { "type": "integer", "description": "Processing time in milliseconds" },
+                        "stats": {
+                          "type": "object",
+                          "properties": {
+                            "searches_processed": { "type": "integer" },
+                            "searches_with_leads": { "type": "integer" },
+                            "leads_enriched": { "type": "integer" },
+                            "errors": { "type": "integer" }
+                          }
+                        }
+                      }
+                    },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "total_searches_found": { "type": "integer", "description": "Total searches found" },
+                        "searches_processed": { "type": "integer", "description": "Number of searches processed" },
+                        "searches_with_leads": { "type": "integer", "description": "Number of searches with leads" },
+                        "total_leads_extracted": { "type": "integer", "description": "Total leads extracted" },
+                        "leads_enriched": { "type": "integer", "description": "Number of leads enriched" },
+                        "errors_encountered": { "type": "integer", "description": "Number of errors encountered" },
+                        "processing_time_ms": { "type": "integer", "description": "Processing time in milliseconds" }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "workflow": "all-searches-complete",
+                    "timestamp": "2024-01-01T10:00:00.000Z",
+                    "searches": [
+                      {
+                        "id": "ca1e637b-332f-4df9-8ad2-2bd9bb3cacd4",
+                        "name": "[Oltega] Enrichissement Kab recrutement 39 entreprise",
+                        "leads_count": 60,
+                        "created_at": "2025-07-06T15:07:10.787Z",
+                        "details": {
+                          "id": "ca1e637b-332f-4df9-8ad2-2bd9bb3cacd4",
+                          "name": "[Oltega] Enrichissement Kab recrutement 39 entreprise",
+                          "leads_count": 60,
+                          "created_at": "2025-07-06T15:07:10.787Z"
+                        },
+                        "leads": [
+                          {
+                            "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                            "first_name": "John",
+                            "last_name": "Doe",
+                            "email": "john.doe@company.com",
+                            "job_title": "CEO",
+                            "company": "Tech Corp",
+                            "linkedin_url": "https://linkedin.com/in/johndoe"
+                          }
+                        ],
+                        "leads_pagination": {
+                          "page": 1,
+                          "limit": 50,
+                          "total": 60,
+                          "pages": 2
+                        },
+                        "processed": true,
+                        "error": null
+                      }
+                    ],
+                    "total_searches": 17,
+                    "total_leads": 60,
+                    "processing_time": 5000,
+                    "stats": {
+                      "searches_processed": 1,
+                      "searches_with_leads": 1,
+                      "leads_enriched": 0,
+                      "errors": 0
+                    }
+                  },
+                  "summary": {
+                    "total_searches_found": 17,
+                    "searches_processed": 1,
+                    "searches_with_leads": 1,
+                    "total_leads_extracted": 60,
+                    "leads_enriched": 0,
+                    "errors_encountered": 0,
+                    "processing_time_ms": 5000
+                  }
+                }
+              } 
+            } 
+          }, 
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      }
+    },
+    "/api/pronto-workflows/search-leads/{searchId}": {
+      "get": { 
+        "summary": "Get leads from a specific search", 
+        "description": "Workflow to retrieve all leads from a specific saved search with optional enrichment",
+        "tags": ["Pronto Workflows"], 
+        "parameters": [ 
+          { 
+            "name": "searchId", 
+            "in": "path", 
+            "required": true, 
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "UUID of the search to retrieve leads from"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 1, "minimum": 1 },
+            "description": "Page number for pagination"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 100, "minimum": 1, "maximum": 1000 },
+            "description": "Number of leads per page"
+          },
+          {
+            "name": "include_enrichment",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": false },
+            "description": "Whether to enrich lead data with additional information"
+          }
+        ], 
+        "responses": { 
+          "200": { 
+            "description": "Leads from the search", 
+            "content": { 
+              "application/json": { 
+                "schema": { 
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "description": "Workflow success status" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "workflow": { "type": "string", "description": "Workflow name" },
+                        "timestamp": { "type": "string", "format": "date-time", "description": "Execution timestamp" },
+                        "search_id": { "type": "string", "format": "uuid", "description": "Search ID" },
+                        "search_details": { "$ref": "#/components/schemas/ProntoSearch" },
+                        "leads": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/ProntoContact"
+                          }
+                        },
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "page": { "type": "integer", "description": "Current page number" },
+                            "limit": { "type": "integer", "description": "Number of items per page" },
+                            "total": { "type": "integer", "description": "Total number of leads" },
+                            "pages": { "type": "integer", "description": "Total number of pages" }
+                          }
+                        },
+                        "processing_time": { "type": "integer", "description": "Processing time in milliseconds" }
+                      }
+                    },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "search_name": { "type": "string", "description": "Name of the search" },
+                        "leads_found": { "type": "integer", "description": "Number of leads found" },
+                        "leads_enriched": { "type": "integer", "description": "Number of leads enriched" },
+                        "total_pages": { "type": "integer", "description": "Total number of pages" },
+                        "processing_time_ms": { "type": "integer", "description": "Processing time in milliseconds" }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "workflow": "search-leads",
+                    "timestamp": "2024-01-01T10:00:00.000Z",
+                    "search_id": "ca1e637b-332f-4df9-8ad2-2bd9bb3cacd4",
+                    "search_details": {
+                      "id": "ca1e637b-332f-4df9-8ad2-2bd9bb3cacd4",
+                      "name": "[Oltega] Enrichissement Kab recrutement 39 entreprise",
+                      "leads_count": 60,
+                      "created_at": "2025-07-06T15:07:10.787Z"
+                    },
+                    "leads": [
+                      {
+                        "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                        "first_name": "John",
+                        "last_name": "Doe",
+                        "email": "john.doe@company.com",
+                        "job_title": "CEO",
+                        "company": "Tech Corp",
+                        "linkedin_url": "https://linkedin.com/in/johndoe",
+                        "phone": "+33123456789",
+                        "enriched": true
+                      }
+                    ],
+                    "pagination": {
+                      "page": 1,
+                      "limit": 100,
+                      "total": 60,
+                      "pages": 1
+                    },
+                    "processing_time": 2500
+                  },
+                  "summary": {
+                    "search_name": "[Oltega] Enrichissement Kab recrutement 39 entreprise",
+                    "leads_found": 60,
+                    "leads_enriched": 60,
+                    "total_pages": 1,
+                    "processing_time_ms": 2500
+                  }
+                }
+              } 
+            } 
+          }, 
+          "400": { "description": "Bad Request - Invalid search ID" },
+          "404": { "description": "Search not found" },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      }
+    },
+    "/api/pronto-workflows/search-leads-enhanced/{searchId}": {
+      "get": { 
+        "summary": "Get enhanced leads from a specific search", 
+        "description": "Advanced workflow to retrieve leads with comprehensive enrichment including personal, professional, company and financial data",
+        "tags": ["Pronto Workflows"], 
+        "parameters": [ 
+          { 
+            "name": "searchId", 
+            "in": "path", 
+            "required": true, 
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "UUID of the search to retrieve leads from"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 1, "minimum": 1 },
+            "description": "Page number for pagination"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 50, "minimum": 1, "maximum": 100 },
+            "description": "Number of leads per page (limited due to enrichment complexity)"
+          },
+          {
+            "name": "include_company_data",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": true },
+            "description": "Whether to include detailed company information"
+          },
+          {
+            "name": "include_financial",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": true },
+            "description": "Whether to include financial data (revenue, funding, etc.)"
+          }
+        ], 
+        "responses": { 
+          "200": { 
+            "description": "Enhanced leads from the search", 
+            "content": { 
+              "application/json": { 
+                "schema": { 
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "description": "Workflow success status" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "workflow": { "type": "string", "description": "Workflow name" },
+                        "timestamp": { "type": "string", "format": "date-time", "description": "Execution timestamp" },
+                        "search_id": { "type": "string", "format": "uuid", "description": "Search ID" },
+                        "search_details": { "$ref": "#/components/schemas/ProntoSearch" },
+                        "leads": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "uuid": { "type": "string", "format": "uuid" },
+                              "first_name": { "type": "string" },
+                              "last_name": { "type": "string" },
+                              "email": { "type": "string" },
+                              "job_title": { "type": "string" },
+                              "company": { "type": "string" },
+                              "linkedin_url": { "type": "string" },
+                              "enriched": { "type": "boolean" },
+                              "personal_data": {
+                                "type": "object",
+                                "properties": {
+                                  "full_name": { "type": "string" },
+                                  "email": { "type": "string" },
+                                  "phone": { "type": "string" },
+                                  "location": { "type": "string" },
+                                  "social_profiles": {
+                                    "type": "object",
+                                    "properties": {
+                                      "linkedin": { "type": "string" },
+                                      "twitter": { "type": "string" },
+                                      "facebook": { "type": "string" }
+                                    }
+                                  },
+                                  "bio": { "type": "string" },
+                                  "skills": { "type": "array", "items": { "type": "string" } }
+                                }
+                              },
+                              "professional_data": {
+                                "type": "object",
+                                "properties": {
+                                  "current_position": { "type": "string" },
+                                  "company": { "type": "string" },
+                                  "industry": { "type": "string" },
+                                  "experience_years": { "type": "integer" },
+                                  "education": { "type": "array", "items": { "type": "object" } },
+                                  "certifications": { "type": "array", "items": { "type": "string" } },
+                                  "career_history": { "type": "array", "items": { "type": "object" } }
+                                }
+                              },
+                              "company_data": {
+                                "type": "object",
+                                "properties": {
+                                  "headcount": { "type": "integer" },
+                                  "industry": { "type": "string" },
+                                  "location": { "type": "string" },
+                                  "founded_year": { "type": "integer" },
+                                  "company_type": { "type": "string" },
+                                  "website": { "type": "string" },
+                                  "linkedin_url": { "type": "string" }
+                                }
+                              },
+                              "financial_data": {
+                                "type": "object",
+                                "properties": {
+                                  "company_revenue": { "type": "integer" },
+                                  "revenue_currency": { "type": "string" },
+                                  "revenue_year": { "type": "integer" },
+                                  "funding_status": { "type": "string" },
+                                  "funding_rounds": { "type": "array", "items": { "type": "object" } },
+                                  "valuation": { "type": "integer" },
+                                  "financial_health_score": { "type": "integer" }
+                                }
+                              },
+                              "contact_details": {
+                                "type": "object",
+                                "properties": {
+                                  "email_verified": { "type": "boolean" },
+                                  "phone_verified": { "type": "boolean" },
+                                  "preferred_contact_method": { "type": "string" },
+                                  "contact_score": { "type": "integer" }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "page": { "type": "integer", "description": "Current page number" },
+                            "limit": { "type": "integer", "description": "Number of items per page" },
+                            "total": { "type": "integer", "description": "Total number of leads" },
+                            "pages": { "type": "integer", "description": "Total number of pages" }
+                          }
+                        },
+                        "processing_time": { "type": "integer", "description": "Processing time in milliseconds" },
+                        "enrichment_stats": {
+                          "type": "object",
+                          "properties": {
+                            "leads_enriched": { "type": "integer" },
+                            "leads_with_company_data": { "type": "integer" },
+                            "leads_with_financial_data": { "type": "integer" },
+                            "leads_with_contact_details": { "type": "integer" }
+                          }
+                        }
+                      }
+                    },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "search_name": { "type": "string", "description": "Name of the search" },
+                        "leads_found": { "type": "integer", "description": "Number of leads found" },
+                        "leads_enriched": { "type": "integer", "description": "Number of leads enriched" },
+                        "leads_with_company_data": { "type": "integer", "description": "Number of leads with company data" },
+                        "leads_with_financial_data": { "type": "integer", "description": "Number of leads with financial data" },
+                        "leads_with_contact_details": { "type": "integer", "description": "Number of leads with contact details" },
+                        "total_pages": { "type": "integer", "description": "Total number of pages" },
+                        "processing_time_ms": { "type": "integer", "description": "Processing time in milliseconds" }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "workflow": "enhanced-search-leads",
+                    "timestamp": "2024-01-01T10:00:00.000Z",
+                    "search_id": "ca1e637b-332f-4df9-8ad2-2bd9bb3cacd4",
+                    "search_details": {
+                      "id": "ca1e637b-332f-4df9-8ad2-2bd9bb3cacd4",
+                      "name": "[Oltega] Enrichissement Kab recrutement 39 entreprise",
+                      "leads_count": 60,
+                      "created_at": "2025-07-06T15:07:10.787Z"
+                    },
+                    "leads": [
+                      {
+                        "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                        "first_name": "John",
+                        "last_name": "Doe",
+                        "email": "john.doe@company.com",
+                        "job_title": "CEO",
+                        "company": "Tech Corp",
+                        "linkedin_url": "https://linkedin.com/in/johndoe",
+                        "enriched": true,
+                        "personal_data": {
+                          "full_name": "John Doe",
+                          "email": "john.doe@company.com",
+                          "phone": "+33123456789",
+                          "location": "Paris, France",
+                          "social_profiles": {
+                            "linkedin": "https://linkedin.com/in/johndoe",
+                            "twitter": null,
+                            "facebook": null
+                          },
+                          "bio": "Experienced CEO with 15+ years in tech",
+                          "skills": ["Leadership", "Strategy", "Technology"]
+                        },
+                        "professional_data": {
+                          "current_position": "CEO",
+                          "company": "Tech Corp",
+                          "industry": "Technology",
+                          "experience_years": 15,
+                          "education": [
+                            { "degree": "MBA", "school": "HEC Paris", "year": 2010 }
+                          ],
+                          "certifications": ["PMP", "Scrum Master"],
+                          "career_history": [
+                            { "position": "CTO", "company": "Previous Corp", "duration": "2015-2020" }
+                          ]
+                        },
+                        "company_data": {
+                          "headcount": 150,
+                          "industry": "Technology",
+                          "location": "Paris, France",
+                          "founded_year": 2015,
+                          "company_type": "Private",
+                          "website": "techcorp.com",
+                          "linkedin_url": "linkedin.com/company/techcorp"
+                        },
+                        "financial_data": {
+                          "company_revenue": 25000000,
+                          "revenue_currency": "EUR",
+                          "revenue_year": 2024,
+                          "funding_status": "funded",
+                          "funding_rounds": [
+                            { "round": "Series A", "amount": 5000000, "date": "2023-01-01" }
+                          ],
+                          "valuation": 100000000,
+                          "financial_health_score": 85
+                        },
+                        "contact_details": {
+                          "email_verified": true,
+                          "phone_verified": true,
+                          "preferred_contact_method": "email",
+                          "contact_score": 95
+                        }
+                      }
+                    ],
+                    "pagination": {
+                      "page": 1,
+                      "limit": 50,
+                      "total": 60,
+                      "pages": 2
+                    },
+                    "processing_time": 5000,
+                    "enrichment_stats": {
+                      "leads_enriched": 1,
+                      "leads_with_company_data": 1,
+                      "leads_with_financial_data": 1,
+                      "leads_with_contact_details": 1
+                    }
+                  },
+                  "summary": {
+                    "search_name": "[Oltega] Enrichissement Kab recrutement 39 entreprise",
+                    "leads_found": 1,
+                    "leads_enriched": 1,
+                    "leads_with_company_data": 1,
+                    "leads_with_financial_data": 1,
+                    "leads_with_contact_details": 1,
+                    "total_pages": 2,
+                    "processing_time_ms": 5000
+                  }
+                }
+              } 
+            } 
+          }, 
+          "400": { "description": "Bad Request - Invalid search ID" },
+          "404": { "description": "Search not found" },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      }
+    },
+    "/api/pronto-workflows/company-search-automatic": {
+      "post": { 
+        "summary": "Automatic company search with complete enrichment", 
+        "description": "Automated workflow that combines company search, enrichment, headcount, contacts, and growth analysis in one operation. Just provide a query and get everything automatically!",
+        "tags": ["Pronto Workflows"], 
+        "requestBody": { 
+          "required": true, 
+          "content": { 
+            "application/json": { 
+              "schema": { 
+                "type": "object",
+                "properties": {
+                  "query": { "type": "string", "description": "Search query for companies (required)" },
+                  "filters": { 
+                    "type": "object", 
+                    "description": "Additional filters for the search",
+                    "properties": {
+                      "industry": { "type": "string", "description": "Industry filter" },
+                      "location": { "type": "string", "description": "Location filter" },
+                      "size": { "type": "string", "description": "Company size filter" }
+                    }
+                  },
+                  "limit": { "type": "integer", "default": 10, "description": "Maximum number of companies to return" },
+                  "auto_enrich": { "type": "boolean", "default": true, "description": "Whether to automatically enrich all companies" },
+                  "include_contacts": { "type": "boolean", "default": true, "description": "Whether to include key contacts" },
+                  "include_headcount": { "type": "boolean", "default": true, "description": "Whether to include headcount data" },
+                  "include_financial": { "type": "boolean", "default": true, "description": "Whether to include financial data" },
+                  "include_growth_analysis": { "type": "boolean", "default": true, "description": "Whether to include growth analysis" }
+                },
+                "required": ["query"]
+              },
+              "example": {
+                "query": "Technology companies in Paris",
+                "filters": {
+                  "industry": "Technology",
+                  "location": "Paris, France",
+                  "size": "10-50"
+                },
+                "limit": 5,
+                "auto_enrich": true,
+                "include_contacts": true,
+                "include_headcount": true,
+                "include_financial": true,
+                "include_growth_analysis": true
+              }
+            } 
+          } 
+        }, 
+        "responses": { 
+          "200": { 
+            "description": "Automatically enriched company search results", 
+            "content": { 
+              "application/json": { 
+                "schema": { 
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "description": "Workflow success status" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "workflow": { "type": "string", "description": "Workflow name" },
+                        "timestamp": { "type": "string", "format": "date-time", "description": "Execution timestamp" },
+                        "query": { "type": "string", "description": "Original search query" },
+                        "filters": { "type": "object", "description": "Applied filters" },
+                        "companies": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "name": { "type": "string", "description": "Company name" },
+                              "website": { "type": "string", "description": "Company website" },
+                              "linkedin_url": { "type": "string", "description": "LinkedIn URL" },
+                              "enriched": { "type": "boolean", "description": "Whether company was enriched" },
+                              "financial_data": { "type": "object", "description": "Financial information" },
+                              "headcount_data": { "type": "object", "description": "Headcount information" },
+                              "key_contacts": {
+                                "type": "array",
+                                "items": {
+                                  "$ref": "#/components/schemas/ProntoContact"
+                                }
+                              },
+                              "contacts_count": { "type": "integer", "description": "Number of contacts found" },
+                              "growth_analysis": { "type": "object", "description": "Growth analysis data" },
+                              "enrichment_errors": { "type": "array", "items": { "type": "string" }, "description": "List of enrichment errors" }
+                            }
+                          }
+                        },
+                        "total_found": { "type": "integer", "description": "Total companies found" },
+                        "processing_time": { "type": "integer", "description": "Processing time in milliseconds" },
+                        "enrichment_stats": {
+                          "type": "object",
+                          "properties": {
+                            "companies_enriched": { "type": "integer" },
+                            "companies_with_financial": { "type": "integer" },
+                            "companies_with_headcount": { "type": "integer" },
+                            "companies_with_contacts": { "type": "integer" },
+                            "companies_with_growth_data": { "type": "integer" },
+                            "errors": { "type": "integer" }
+                          }
+                        }
+                      }
+                    },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "companies_found": { "type": "integer", "description": "Number of companies found" },
+                        "companies_enriched": { "type": "integer", "description": "Number of companies enriched" },
+                        "companies_with_financial": { "type": "integer", "description": "Number of companies with financial data" },
+                        "companies_with_headcount": { "type": "integer", "description": "Number of companies with headcount data" },
+                        "companies_with_contacts": { "type": "integer", "description": "Number of companies with contacts" },
+                        "companies_with_growth_data": { "type": "integer", "description": "Number of companies with growth data" },
+                        "errors_encountered": { "type": "integer", "description": "Number of errors encountered" },
+                        "processing_time_ms": { "type": "integer", "description": "Processing time in milliseconds" }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "workflow": "company-search-automatic",
+                    "timestamp": "2024-01-01T10:00:00.000Z",
+                    "query": "Technology companies in Paris",
+                    "filters": {
+                      "industry": "Technology",
+                      "location": "Paris, France"
+                    },
+                    "companies": [
+                      {
+                        "name": "Tech Corp",
+                        "website": "techcorp.com",
+                        "linkedin_url": "https://linkedin.com/company/techcorp",
+                        "enriched": true,
+                        "financial_data": {
+                          "revenue": 2500000,
+                          "revenue_currency": "EUR",
+                          "revenue_year": 2024
+                        },
+                        "headcount_data": {
+                          "current_headcount": 45
+                        },
+                        "key_contacts": [
+                          {
+                            "first_name": "John",
+                            "last_name": "Doe",
+                            "email": "john.doe@techcorp.com",
+                            "job_title": "CEO"
+                          }
+                        ],
+                        "contacts_count": 1,
+                        "growth_analysis": {
+                          "growth_score": 85,
+                          "hiring_trend": "increasing"
+                        },
+                        "enrichment_errors": []
+                      }
+                    ],
+                    "total_found": 1,
+                    "processing_time": 3500,
+                    "enrichment_stats": {
+                      "companies_enriched": 1,
+                      "companies_with_financial": 1,
+                      "companies_with_headcount": 1,
+                      "companies_with_contacts": 1,
+                      "companies_with_growth_data": 1,
+                      "errors": 0
+                    }
+                  },
+                  "summary": {
+                    "companies_found": 1,
+                    "companies_enriched": 1,
+                    "companies_with_financial": 1,
+                    "companies_with_headcount": 1,
+                    "companies_with_contacts": 1,
+                    "companies_with_growth_data": 1,
+                    "errors_encountered": 0,
+                    "processing_time_ms": 3500
+                  }
+                }
+              } 
+            } 
+          }, 
+          "400": { "description": "Bad Request - Invalid input parameters" },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      }
+    },
+    "/api/pronto/workflows/company-search": {
+      "post": { 
+        "summary": "Company Search Workflow", 
+        "description": "Complete workflow for enriched company search - reproduces SocieteInfo.com functionality. Combines company search, headcount analysis, and contact enrichment in one operation.",
+        "tags": ["Pronto Workflows"], 
+        "requestBody": { 
+          "required": true, 
+          "content": { 
+            "application/json": { 
+              "schema": { 
+                "type": "object",
+                "properties": {
+                  "query": { "type": "string", "description": "Search query for companies (required)" },
+                  "filters": {
+                    "type": "object",
+                    "properties": {
+                      "industry": { "type": "string", "description": "Industry filter" },
+                      "location": { "type": "string", "description": "Location filter" },
+                      "size": { "type": "string", "description": "Company size filter" },
+                      "funding": { "type": "string", "description": "Funding status filter" }
+                    }
+                  },
+                  "limit": { "type": "integer", "description": "Maximum number of companies to return", "default": 10 },
+                  "include_contacts": { "type": "boolean", "description": "Include key contacts for each company", "default": true },
+                  "include_headcount": { "type": "boolean", "description": "Include headcount data for each company", "default": true }
+                },
+                "required": ["query"]
+              },
+              "example": {
+                "query": "technology companies",
+                "filters": {
+                  "industry": "Technology",
+                  "location": "Paris, France",
+                  "size": "10-50"
+                },
+                "limit": 10,
+                "include_contacts": true,
+                "include_headcount": true
+              }
+            } 
+          } 
+        }, 
+        "responses": { 
+          "200": { 
+            "description": "Enriched company search results", 
+            "content": { 
+              "application/json": { 
+                "schema": { 
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "description": "Workflow success status" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "workflow": { "type": "string", "description": "Workflow name" },
+                        "timestamp": { "type": "string", "format": "date-time", "description": "Execution timestamp" },
+                        "query": { "type": "string", "description": "Original search query" },
+                        "filters": { "type": "object", "description": "Applied filters" },
+                        "companies": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "uuid": { "type": "string", "format": "uuid", "description": "Company UUID" },
+                              "name": { "type": "string", "description": "Company name" },
+                              "website": { "type": "string", "description": "Company website" },
+                              "linkedin_url": { "type": "string", "description": "LinkedIn URL" },
+                              "industry": { "type": "string", "description": "Industry" },
+                              "size": { "type": "string", "description": "Company size" },
+                              "location": { "type": "string", "description": "Location" },
+                              "enriched": { "type": "boolean", "description": "Enrichment success" },
+                              "headcount_data": { "type": "object", "description": "Headcount information" },
+                              "key_contacts": {
+                                "type": "array",
+                                "items": { "$ref": "#/components/schemas/ProntoContact" },
+                                "description": "Key contacts at the company"
+                              },
+                              "contacts_count": { "type": "integer", "description": "Total number of contacts found" }
+                            }
+                          }
+                        },
+                        "total_found": { "type": "integer", "description": "Total companies found" },
+                        "processing_time": { "type": "integer", "description": "Processing time in milliseconds" }
+                      }
+                    },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "companies_found": { "type": "integer", "description": "Number of companies found" },
+                        "companies_enriched": { "type": "integer", "description": "Number of successfully enriched companies" },
+                        "companies_with_contacts": { "type": "integer", "description": "Number of companies with contact data" },
+                        "companies_with_headcount": { "type": "integer", "description": "Number of companies with headcount data" },
+                        "processing_time_ms": { "type": "integer", "description": "Total processing time" }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "workflow": "company-search",
+                    "timestamp": "2024-01-01T10:00:00.000Z",
+                    "query": "technology companies",
+                    "filters": {
+                      "industry": "Technology",
+                      "location": "Paris, France"
+                    },
+                    "companies": [
+                      {
+                        "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                        "name": "TechCorp",
+                        "website": "https://techcorp.com",
+                        "linkedin_url": "https://linkedin.com/company/techcorp",
+                        "industry": "Technology",
+                        "size": "10-50",
+                        "location": "Paris, France",
+                        "enriched": true,
+                        "headcount_data": {
+                          "current_headcount": 25,
+                          "headcount_history": [
+                            { "date": "2023-01-01", "count": 20 },
+                            { "date": "2024-01-01", "count": 25 }
+                          ]
+                        },
+                        "key_contacts": [
+                          {
+                            "uuid": "123e4567-e89b-12d3-a456-426614174001",
+                            "first_name": "John",
+                            "last_name": "Doe",
+                            "email": "john.doe@techcorp.com",
+                            "job_title": "CEO",
+                            "company": "TechCorp"
+                          }
+                        ],
+                        "contacts_count": 1
+                      }
+                    ],
+                    "total_found": 1,
+                    "processing_time": 2500
+                  },
+                  "summary": {
+                    "companies_found": 1,
+                    "companies_enriched": 1,
+                    "companies_with_contacts": 1,
+                    "companies_with_headcount": 1,
+                    "processing_time_ms": 2500
+                  }
+                }
+              } 
+            } 
+          }, 
+          "400": { "description": "Invalid input parameters" },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Workflow execution failed" }
+        } 
+      }
+    },
+    "/api/pronto/workflows/market-analysis": {
+      "post": { 
+        "summary": "Market Analysis Workflow", 
+        "description": "Complete market analysis workflow that identifies growing companies, hiring companies, and provides market insights for a specific industry and location.",
+        "tags": ["Pronto Workflows"], 
+        "requestBody": { 
+          "required": true, 
+          "content": { 
+            "application/json": { 
+              "schema": { 
+                "type": "object",
+                "properties": {
+                  "industry": { "type": "string", "description": "Industry to analyze (required)" },
+                  "location": { "type": "string", "description": "Geographic location for analysis" },
+                  "limit": { "type": "integer", "description": "Maximum number of companies to analyze", "default": 10 }
+                },
+                "required": ["industry"]
+              },
+              "example": {
+                "industry": "Technology",
+                "location": "Paris, France",
+                "limit": 10
+              }
+            } 
+          } 
+        }, 
+        "responses": { 
+          "200": { 
+            "description": "Market analysis results", 
+            "content": { 
+              "application/json": { 
+                "schema": { 
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "description": "Workflow success status" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "workflow": { "type": "string", "description": "Workflow name" },
+                        "timestamp": { "type": "string", "format": "date-time", "description": "Execution timestamp" },
+                        "industry": { "type": "string", "description": "Analyzed industry" },
+                        "location": { "type": "string", "description": "Analyzed location" },
+                        "growing_companies": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "company": { "$ref": "#/components/schemas/ProntoAccount" },
+                              "growth_indicators": { "type": "array", "items": { "type": "string" } },
+                              "growth_score": { "type": "number" }
+                            }
+                          }
+                        },
+                        "hiring_companies": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "company": { "$ref": "#/components/schemas/ProntoAccount" },
+                              "job_count": { "type": "integer" },
+                              "recent_postings": { "type": "array", "items": { "type": "string" } }
+                            }
+                          }
+                        },
+                        "market_insights": {
+                          "type": "object",
+                          "properties": {
+                            "total_growing_companies": { "type": "integer" },
+                            "total_hiring_companies": { "type": "integer" },
+                            "headcount_analysis": { "type": "array" },
+                            "market_activity_score": { "type": "number" }
+                          }
+                        },
+                        "processing_time": { "type": "integer", "description": "Processing time in milliseconds" }
+                      }
+                    },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "growing_companies": { "type": "integer" },
+                        "hiring_companies": { "type": "integer" },
+                        "market_activity_score": { "type": "number" },
+                        "processing_time_ms": { "type": "integer" }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "workflow": "market-analysis",
+                    "timestamp": "2024-01-01T10:00:00.000Z",
+                    "industry": "Technology",
+                    "location": "Paris, France",
+                    "growing_companies": [
+                      {
+                        "company": {
+                          "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                          "name": "TechCorp",
+                          "industry": "Technology",
+                          "size": "10-50",
+                          "location": "Paris, France"
+                        },
+                        "growth_indicators": ["Recent hiring", "New office opening"],
+                        "growth_score": 85
+                      }
+                    ],
+                    "hiring_companies": [
+                      {
+                        "company": {
+                          "uuid": "123e4567-e89b-12d3-a456-426614174001",
+                          "name": "StartupXYZ",
+                          "industry": "Technology",
+                          "size": "1-10",
+                          "location": "Paris, France"
+                        },
+                        "job_count": 5,
+                        "recent_postings": ["Software Engineer", "Product Manager"]
+                      }
+                    ],
+                    "market_insights": {
+                      "total_growing_companies": 1,
+                      "total_hiring_companies": 1,
+                      "headcount_analysis": [
+                        {
+                          "company": "TechCorp",
+                          "headcount_data": {
+                            "current_headcount": 25,
+                            "headcount_history": [
+                              { "date": "2023-01-01", "count": 20 },
+                              { "date": "2024-01-01", "count": 25 }
+                            ]
+                          }
+                        }
+                      ],
+                      "market_activity_score": 85
+                    },
+                    "processing_time": 3000
+                  },
+                  "summary": {
+                    "growing_companies": 1,
+                    "hiring_companies": 1,
+                    "market_activity_score": 85,
+                    "processing_time_ms": 3000
+                  }
+                }
+              } 
+            } 
+          }, 
+          "400": { "description": "Invalid input parameters" },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Workflow execution failed" }
+        } 
+      }
+    },
+    "/api/pronto/workflows/targeted-prospecting": {
+      "post": { 
+        "summary": "Targeted Prospecting Workflow", 
+        "description": "Complete prospecting workflow that finds and enriches contacts based on specific job titles, companies, and locations. Includes new hires detection.",
+        "tags": ["Pronto Workflows"], 
+        "requestBody": { 
+          "required": true, 
+          "content": { 
+            "application/json": { 
+              "schema": { 
+                "type": "object",
+                "properties": {
+                  "job_titles": { 
+                    "type": "array", 
+                    "items": { "type": "string" }, 
+                    "description": "Array of job titles to search for (required)" 
+                  },
+                  "companies": { 
+                    "type": "array", 
+                    "items": { "type": "string" }, 
+                    "description": "Array of target companies" 
+                  },
+                  "location": { "type": "string", "description": "Geographic location filter" },
+                  "limit": { "type": "integer", "description": "Maximum number of prospects to return", "default": 20 },
+                  "include_new_hires": { "type": "boolean", "description": "Include recent new hires", "default": true }
+                },
+                "required": ["job_titles"]
+              },
+              "example": {
+                "job_titles": ["Software Engineer", "Product Manager"],
+                "companies": ["Google", "Microsoft"],
+                "location": "Paris, France",
+                "limit": 20,
+                "include_new_hires": true
+              }
+            } 
+          } 
+        }, 
+        "responses": { 
+          "200": { 
+            "description": "Targeted prospecting results", 
+            "content": { 
+              "application/json": { 
+                "schema": { 
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "description": "Workflow success status" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "workflow": { "type": "string", "description": "Workflow name" },
+                        "timestamp": { "type": "string", "format": "date-time", "description": "Execution timestamp" },
+                        "job_titles": { "type": "array", "items": { "type": "string" }, "description": "Searched job titles" },
+                        "companies": { "type": "array", "items": { "type": "string" }, "description": "Target companies" },
+                        "location": { "type": "string", "description": "Location filter" },
+                        "prospects": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "uuid": { "type": "string", "format": "uuid" },
+                              "first_name": { "type": "string" },
+                              "last_name": { "type": "string" },
+                              "email": { "type": "string" },
+                              "phone": { "type": "string" },
+                              "job_title": { "type": "string" },
+                              "company": { "type": "string" },
+                              "linkedin_url": { "type": "string" },
+                              "enriched": { "type": "boolean" }
+                            }
+                          }
+                        },
+                        "new_hires": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "contact": { "$ref": "#/components/schemas/ProntoContact" },
+                              "start_date": { "type": "string", "format": "date" },
+                              "previous_company": { "type": "string" }
+                            }
+                          }
+                        },
+                        "processing_time": { "type": "integer", "description": "Processing time in milliseconds" }
+                      }
+                    },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "total_prospects": { "type": "integer" },
+                        "enriched_prospects": { "type": "integer" },
+                        "new_hires": { "type": "integer" },
+                        "processing_time_ms": { "type": "integer" }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "workflow": "targeted-prospecting",
+                    "timestamp": "2024-01-01T10:00:00.000Z",
+                    "job_titles": ["Software Engineer", "Product Manager"],
+                    "companies": ["Google", "Microsoft"],
+                    "location": "Paris, France",
+                    "prospects": [
+                      {
+                        "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                        "first_name": "John",
+                        "last_name": "Doe",
+                        "email": "john.doe@google.com",
+                        "phone": "+33123456789",
+                        "job_title": "Software Engineer",
+                        "company": "Google",
+                        "linkedin_url": "https://linkedin.com/in/johndoe",
+                        "enriched": true
+                      }
+                    ],
+                    "new_hires": [
+                      {
+                        "contact": {
+                          "uuid": "123e4567-e89b-12d3-a456-426614174001",
+                          "first_name": "Jane",
+                          "last_name": "Smith",
+                          "email": "jane.smith@microsoft.com",
+                          "job_title": "Product Manager",
+                          "company": "Microsoft"
+                        },
+                        "start_date": "2024-01-01",
+                        "previous_company": "Google"
+                      }
+                    ],
+                    "processing_time": 4000
+                  },
+                  "summary": {
+                    "total_prospects": 1,
+                    "enriched_prospects": 1,
+                    "new_hires": 1,
+                    "processing_time_ms": 4000
+                  }
+                }
+              } 
+            } 
+          }, 
+          "400": { "description": "Invalid input parameters" },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Workflow execution failed" }
+        } 
+      }
     }
   },
   "components": {
@@ -2259,6 +3581,10 @@
     {
       "name": "Pronto",
       "description": "Pronto API endpoints for B2B prospecting and data enrichment"
+    },
+    {
+      "name": "Pronto Workflows",
+      "description": "Composite workflows that combine multiple Pronto API calls for complex operations"
     }
   ],
   "x-endpoint-descriptions": [
