@@ -257,6 +257,1436 @@
       "get": { "summary": "Get a credit log by ID", "tags": ["CreditLog"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "200": { "description": "Credit log found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreditLog" } } } }, "404": { "description": "Credit log not found" } } },
       "put": { "summary": "Update a credit log by ID", "tags": ["CreditLog"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreditLogInput" } } } }, "responses": { "200": { "description": "Credit log updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreditLog" } } } }, "400": { "description": "Invalid input" }, "404": { "description": "Credit log not found" } } },
       "delete": { "summary": "Delete a credit log by ID", "tags": ["CreditLog"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "204": { "description": "Credit log deleted" }, "404": { "description": "Credit log not found" } } }
+    },
+    "/api/pronto/personas": {
+      "get": { 
+        "summary": "List all personas", 
+        "description": "Retrieves a list of all personas available in the system",
+        "tags": ["Pronto"], 
+        "responses": { 
+          "200": { 
+            "description": "List of personas", 
+            "content": { 
+              "application/json": { 
+                "schema": { 
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "personas": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/ProntoPersona"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": [
+                  {
+                    "personas": [
+                      {
+                        "uuid": "8e1dcba0-f0bb-4071-99fc-f18ba6559ccc",
+                        "name": "VP Grenoble",
+                        "job_titles": ["VP of Engineering", "CTO"],
+                        "location": ["Grenoble, Auvergne-Rhône-Alpes, France"],
+                        "created_at": "2024-09-09T15:15:15.951Z",
+                        "updated_at": "2024-09-09T15:15:15.951Z"
+                      }
+                    ]
+                  }
+                ]
+              } 
+            } 
+          },
+          "401": {
+            "description": "Unauthorized - Invalid API key"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        } 
+      }
+    },
+    "/api/pronto/personas/{id}": {
+      "get": { 
+        "summary": "Get a specific persona", 
+        "description": "Retrieves details of a specific persona by UUID",
+        "tags": ["Pronto"], 
+        "parameters": [ 
+          { 
+            "name": "id", 
+            "in": "path", 
+            "required": true, 
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "UUID of the persona to retrieve"
+          } 
+        ], 
+        "responses": { 
+          "200": { 
+            "description": "Persona details", 
+            "content": { 
+              "application/json": { 
+                "schema": { "$ref": "#/components/schemas/ProntoPersona" },
+                "example": {
+                  "uuid": "8e1dcba0-f0bb-4071-99fc-f18ba6559ccc",
+                  "name": "VP Grenoble",
+                  "job_titles": ["VP of Engineering", "CTO"],
+                  "location": ["Grenoble, Auvergne-Rhône-Alpes, France"],
+                  "created_at": "2024-09-09T15:15:15.951Z",
+                  "updated_at": "2024-09-09T15:15:15.951Z"
+                }
+              } 
+            } 
+          }, 
+          "404": { "description": "Persona not found" },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      }
+    },
+    "/api/pronto/lists": {
+      "get": { 
+        "summary": "Retrieve all lists", 
+        "description": "Retrieves a list of all contact and company lists available in the system",
+        "tags": ["Pronto"], 
+        "responses": { 
+          "200": { 
+            "description": "List of lists", 
+            "content": { 
+              "application/json": { 
+                "schema": { 
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProntoList"
+                  }
+                },
+                "example": [
+                  {
+                    "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                    "name": "Tech Companies",
+                    "description": "List of technology companies",
+                    "created_at": "2024-01-01T10:00:00.000Z",
+                    "updated_at": "2024-01-01T10:00:00.000Z"
+                  }
+                ]
+              } 
+            } 
+          },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      },
+      "post": { 
+        "summary": "Create a new list", 
+        "description": "Creates a new list for organizing contacts and companies",
+        "tags": ["Pronto"], 
+        "requestBody": { 
+          "required": true, 
+          "content": { 
+            "application/json": { 
+              "schema": { 
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "description": "Name of the list" },
+                  "description": { "type": "string", "description": "Description of the list" }
+                },
+                "required": ["name"]
+              },
+              "example": {
+                "name": "New Tech List",
+                "description": "List of new technology companies"
+              }
+            } 
+          } 
+        }, 
+        "responses": { 
+          "201": { 
+            "description": "List created", 
+            "content": { 
+              "application/json": { 
+                "schema": { "$ref": "#/components/schemas/ProntoList" },
+                "example": {
+                  "uuid": "123e4567-e89b-12d3-a456-426614174001",
+                  "name": "New Tech List",
+                  "description": "List of new technology companies",
+                  "created_at": "2024-01-01T10:00:00.000Z",
+                  "updated_at": "2024-01-01T10:00:00.000Z"
+                }
+              } 
+            } 
+          }, 
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      }
+    },
+    "/api/pronto/lists/{id}": {
+      "get": { 
+        "summary": "Retrieve a specific list", 
+        "description": "Retrieves details of a specific list by UUID",
+        "tags": ["Pronto"], 
+        "parameters": [ 
+          { 
+            "name": "id", 
+            "in": "path", 
+            "required": true, 
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "UUID of the list to retrieve"
+          } 
+        ], 
+        "responses": { 
+          "200": { 
+            "description": "List details", 
+            "content": { 
+              "application/json": { 
+                "schema": { "$ref": "#/components/schemas/ProntoList" },
+                "example": {
+                  "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                  "name": "Tech Companies",
+                  "description": "List of technology companies",
+                  "created_at": "2024-01-01T10:00:00.000Z",
+                  "updated_at": "2024-01-01T10:00:00.000Z"
+                }
+              } 
+            } 
+          }, 
+          "404": { "description": "List not found" },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      },
+      "put": { 
+        "summary": "Update a list", 
+        "description": "Updates an existing list with new information",
+        "tags": ["Pronto"], 
+        "parameters": [ 
+          { 
+            "name": "id", 
+            "in": "path", 
+            "required": true, 
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "UUID of the list to update"
+          } 
+        ], 
+        "requestBody": { 
+          "required": true, 
+          "content": { 
+            "application/json": { 
+              "schema": { 
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "description": "Name of the list" },
+                  "description": { "type": "string", "description": "Description of the list" }
+                }
+              },
+              "example": {
+                "name": "Updated Tech List",
+                "description": "Updated list of technology companies"
+              }
+            } 
+          } 
+        }, 
+        "responses": { 
+          "200": { 
+            "description": "List updated", 
+            "content": { 
+              "application/json": { 
+                "schema": { "$ref": "#/components/schemas/ProntoList" },
+                "example": {
+                  "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                  "name": "Updated Tech List",
+                  "description": "Updated list of technology companies",
+                  "created_at": "2024-01-01T10:00:00.000Z",
+                  "updated_at": "2024-01-02T10:00:00.000Z"
+                }
+              } 
+            } 
+          }, 
+          "400": { "description": "Invalid input" }, 
+          "404": { "description": "List not found" },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      }
+    },
+    "/api/pronto/searches": {
+      "get": { 
+        "summary": "Retrieve all searches", 
+        "description": "Retrieves a list of all saved searches in the system",
+        "tags": ["Pronto"], 
+        "responses": { 
+          "200": { 
+            "description": "List of searches", 
+            "content": { 
+              "application/json": { 
+                "schema": { 
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProntoSearch"
+                  }
+                },
+                "example": [
+                  {
+                    "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                    "name": "Tech Companies in Paris",
+                    "query": {
+                      "industry": "Technology",
+                      "location": "Paris, France",
+                      "size": "10-50"
+                    },
+                    "created_at": "2024-01-01T10:00:00.000Z",
+                    "updated_at": "2024-01-01T10:00:00.000Z"
+                  }
+                ]
+              } 
+            } 
+          },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      }
+    },
+    "/api/pronto/searches/{id}": {
+      "get": { 
+        "summary": "Retrieve search details", 
+        "description": "Retrieves details of a specific saved search by UUID",
+        "tags": ["Pronto"], 
+        "parameters": [ 
+          { 
+            "name": "id", 
+            "in": "path", 
+            "required": true, 
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "UUID of the search to retrieve"
+          } 
+        ], 
+        "responses": { 
+          "200": { 
+            "description": "Search details", 
+            "content": { 
+              "application/json": { 
+                "schema": { "$ref": "#/components/schemas/ProntoSearch" },
+                "example": {
+                  "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                  "name": "Tech Companies in Paris",
+                  "query": {
+                    "industry": "Technology",
+                    "location": "Paris, France",
+                    "size": "10-50"
+                  },
+                  "created_at": "2024-01-01T10:00:00.000Z",
+                  "updated_at": "2024-01-01T10:00:00.000Z"
+                }
+              } 
+            } 
+          }, 
+          "404": { "description": "Search not found" },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      }
+    },
+    "/api/pronto/accounts/profiles": {
+      "post": { 
+        "summary": "Get profiles in a company", 
+        "description": "Retrieves employee profiles and contact information for a specific company",
+        "tags": ["Pronto"], 
+        "requestBody": { 
+          "required": true, 
+          "content": { 
+            "application/json": { 
+              "schema": { 
+                "type": "object",
+                "properties": {
+                  "company_name": { "type": "string", "description": "Name of the company" },
+                  "domain": { "type": "string", "description": "Company domain/website" },
+                  "limit": { "type": "integer", "description": "Maximum number of profiles to return" }
+                },
+                "required": ["company_name"]
+              },
+              "example": {
+                "company_name": "Google",
+                "domain": "google.com",
+                "limit": 10
+              }
+            } 
+          } 
+        }, 
+        "responses": { 
+          "200": { 
+            "description": "Company profiles", 
+            "content": { 
+              "application/json": { 
+                "schema": { 
+                  "type": "object",
+                  "properties": {
+                    "profiles": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ProntoContact"
+                      }
+                    },
+                    "total": { "type": "integer", "description": "Total number of profiles found" }
+                  }
+                },
+                "example": {
+                  "profiles": [
+                    {
+                      "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                      "first_name": "John",
+                      "last_name": "Doe",
+                      "email": "john.doe@google.com",
+                      "job_title": "Software Engineer",
+                      "company": "Google",
+                      "linkedin_url": "https://linkedin.com/in/johndoe"
+                    }
+                  ],
+                  "total": 1
+                }
+              } 
+            } 
+          }, 
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      }
+    },
+    "/api/pronto/accounts/headcount": {
+      "post": { 
+        "summary": "Get headcount details", 
+        "description": "Retrieves detailed headcount information and employee count evolution for a company",
+        "tags": ["Pronto"], 
+        "requestBody": { 
+          "required": true, 
+          "content": { 
+            "application/json": { 
+              "schema": { 
+                "type": "object",
+                "properties": {
+                  "company_name": { "type": "string", "description": "Name of the company" },
+                  "domain": { "type": "string", "description": "Company domain/website" }
+                },
+                "required": ["company_name"]
+              },
+              "example": {
+                "company_name": "Google",
+                "domain": "google.com"
+              }
+            } 
+          } 
+        }, 
+        "responses": { 
+          "200": { 
+            "description": "Headcount details", 
+            "content": { 
+              "application/json": { 
+                "schema": { 
+                  "type": "object",
+                  "properties": {
+                    "company": { "type": "string", "description": "Company name" },
+                    "current_headcount": { "type": "integer", "description": "Current number of employees" },
+                    "headcount_history": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "date": { "type": "string", "format": "date", "description": "Date of headcount record" },
+                          "count": { "type": "integer", "description": "Number of employees on that date" }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "company": "Google",
+                  "current_headcount": 150000,
+                  "headcount_history": [
+                    {
+                      "date": "2023-01-01",
+                      "count": 140000
+                    },
+                    {
+                      "date": "2024-01-01",
+                      "count": 150000
+                    }
+                  ]
+                }
+              } 
+            } 
+          }, 
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      }
+    },
+    "/api/pronto/accounts/extract": {
+      "post": { 
+        "summary": "Extract account search results", 
+        "description": "Extracts company data based on search criteria and filters",
+        "tags": ["Pronto"], 
+        "requestBody": { 
+          "required": true, 
+          "content": { 
+            "application/json": { 
+              "schema": { 
+                "type": "object",
+                "properties": {
+                  "query": { "type": "string", "description": "Search query for companies" },
+                  "filters": {
+                    "type": "object",
+                    "properties": {
+                      "industry": { "type": "string", "description": "Industry filter" },
+                      "location": { "type": "string", "description": "Location filter" },
+                      "size": { "type": "string", "description": "Company size filter" },
+                      "funding": { "type": "string", "description": "Funding status filter" }
+                    }
+                  },
+                  "limit": { "type": "integer", "description": "Maximum number of results to return" }
+                },
+                "required": ["query"]
+              },
+              "example": {
+                "query": "technology companies",
+                "filters": {
+                  "industry": "Technology",
+                  "location": "Paris, France",
+                  "size": "10-50"
+                },
+                "limit": 10
+              }
+            } 
+          } 
+        }, 
+        "responses": { 
+          "200": { 
+            "description": "Account search results", 
+            "content": { 
+              "application/json": { 
+                "schema": { 
+                  "type": "object",
+                  "properties": {
+                    "accounts": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ProntoAccount"
+                      }
+                    },
+                    "total": { "type": "integer", "description": "Total number of accounts found" }
+                  }
+                },
+                "example": {
+                  "accounts": [
+                    {
+                      "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                      "name": "TechCorp",
+                      "website": "https://techcorp.com",
+                      "linkedin_url": "https://linkedin.com/company/techcorp",
+                      "industry": "Technology",
+                      "size": "10-50",
+                      "location": "Paris, France"
+                    }
+                  ],
+                  "total": 1
+                }
+              } 
+            } 
+          }, 
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      }
+    },
+    "/api/pronto/leads/extract": {
+      "post": { 
+        "summary": "Extract lead search results", 
+        "description": "Extracts contact/lead data based on search criteria and filters",
+        "tags": ["Pronto"], 
+        "requestBody": { 
+          "required": true, 
+          "content": { 
+            "application/json": { 
+              "schema": { 
+                "type": "object",
+                "properties": {
+                  "query": { "type": "string", "description": "Search query for contacts" },
+                  "filters": {
+                    "type": "object",
+                    "properties": {
+                      "job_title": { "type": "string", "description": "Job title filter" },
+                      "company": { "type": "string", "description": "Company filter" },
+                      "location": { "type": "string", "description": "Location filter" },
+                      "seniority": { "type": "string", "description": "Seniority level filter" }
+                    }
+                  },
+                  "limit": { "type": "integer", "description": "Maximum number of results to return" }
+                },
+                "required": ["query"]
+              },
+              "example": {
+                "query": "software engineers",
+                "filters": {
+                  "job_title": "Software Engineer",
+                  "location": "Paris, France",
+                  "seniority": "Senior"
+                },
+                "limit": 10
+              }
+            } 
+          } 
+        }, 
+        "responses": { 
+          "200": { 
+            "description": "Lead search results", 
+            "content": { 
+              "application/json": { 
+                "schema": { 
+                  "type": "object",
+                  "properties": {
+                    "leads": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ProntoContact"
+                      }
+                    },
+                    "total": { "type": "integer", "description": "Total number of leads found" }
+                  }
+                },
+                "example": {
+                  "leads": [
+                    {
+                      "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                      "first_name": "Jane",
+                      "last_name": "Smith",
+                      "email": "jane.smith@techcorp.com",
+                      "job_title": "Senior Software Engineer",
+                      "company": "TechCorp",
+                      "linkedin_url": "https://linkedin.com/in/janesmith"
+                    }
+                  ],
+                  "total": 1
+                }
+              } 
+            } 
+          }, 
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      }
+    },
+    "/api/pronto/leads/company": {
+      "post": { 
+        "summary": "Extract leads from a company", 
+        "description": "Extracts all available contacts/leads from a specific company",
+        "tags": ["Pronto"], 
+        "requestBody": { 
+          "required": true, 
+          "content": { 
+            "application/json": { 
+              "schema": { 
+                "type": "object",
+                "properties": {
+                  "company_name": { "type": "string", "description": "Name of the company" },
+                  "domain": { "type": "string", "description": "Company domain/website" },
+                  "limit": { "type": "integer", "description": "Maximum number of leads to return" }
+                },
+                "required": ["company_name"]
+              },
+              "example": {
+                "company_name": "Google",
+                "domain": "google.com",
+                "limit": 50
+              }
+            } 
+          } 
+        }, 
+        "responses": { 
+          "200": { 
+            "description": "Company leads", 
+            "content": { 
+              "application/json": { 
+                "schema": { 
+                  "type": "object",
+                  "properties": {
+                    "company": { "type": "string", "description": "Company name" },
+                    "leads": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ProntoContact"
+                      }
+                    },
+                    "total": { "type": "integer", "description": "Total number of leads found" }
+                  }
+                },
+                "example": {
+                  "company": "Google",
+                  "leads": [
+                    {
+                      "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                      "first_name": "John",
+                      "last_name": "Doe",
+                      "email": "john.doe@google.com",
+                      "job_title": "Software Engineer",
+                      "company": "Google",
+                      "linkedin_url": "https://linkedin.com/in/johndoe"
+                    }
+                  ],
+                  "total": 1
+                }
+              } 
+            } 
+          }, 
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      }
+    },
+    "/api/pronto/enrichments/account": {
+      "post": { 
+        "summary": "Single account enrichment", 
+        "description": "Enriches a single company account with additional firmographic data",
+        "tags": ["Pronto"], 
+        "requestBody": { 
+          "required": true, 
+          "content": { 
+            "application/json": { 
+              "schema": { 
+                "type": "object",
+                "properties": {
+                  "company_name": { "type": "string", "description": "Name of the company" },
+                  "domain": { "type": "string", "description": "Company domain/website" },
+                  "linkedin_url": { "type": "string", "description": "Company LinkedIn URL" }
+                },
+                "required": ["company_name"]
+              },
+              "example": {
+                "company_name": "TechCorp",
+                "domain": "techcorp.com",
+                "linkedin_url": "https://linkedin.com/company/techcorp"
+              }
+            } 
+          } 
+        }, 
+        "responses": { 
+          "200": { 
+            "description": "Enriched account data", 
+            "content": { 
+              "application/json": { 
+                "schema": { "$ref": "#/components/schemas/ProntoAccount" },
+                "example": {
+                  "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                  "name": "TechCorp",
+                  "website": "https://techcorp.com",
+                  "linkedin_url": "https://linkedin.com/company/techcorp",
+                  "industry": "Technology",
+                  "size": "10-50",
+                  "location": "Paris, France"
+                }
+              } 
+            } 
+          }, 
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      }
+    },
+    "/api/pronto/enrichments/lead": {
+      "post": { 
+        "summary": "Single lead enrichment", 
+        "description": "Enriches a single contact/lead with additional professional information",
+        "tags": ["Pronto"], 
+        "requestBody": { 
+          "required": true, 
+          "content": { 
+            "application/json": { 
+              "schema": { 
+                "type": "object",
+                "properties": {
+                  "first_name": { "type": "string", "description": "Contact's first name" },
+                  "last_name": { "type": "string", "description": "Contact's last name" },
+                  "email": { "type": "string", "description": "Contact's email" },
+                  "company": { "type": "string", "description": "Contact's company" },
+                  "linkedin_url": { "type": "string", "description": "Contact's LinkedIn URL" }
+                },
+                "required": ["first_name", "last_name"]
+              },
+              "example": {
+                "first_name": "John",
+                "last_name": "Doe",
+                "email": "john.doe@techcorp.com",
+                "company": "TechCorp",
+                "linkedin_url": "https://linkedin.com/in/johndoe"
+              }
+            } 
+          } 
+        }, 
+        "responses": { 
+          "200": { 
+            "description": "Enriched lead data", 
+            "content": { 
+              "application/json": { 
+                "schema": { "$ref": "#/components/schemas/ProntoContact" },
+                "example": {
+                  "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                  "first_name": "John",
+                  "last_name": "Doe",
+                  "email": "john.doe@techcorp.com",
+                  "phone": "+33123456789",
+                  "job_title": "Software Engineer",
+                  "company": "TechCorp",
+                  "linkedin_url": "https://linkedin.com/in/johndoe"
+                }
+              } 
+            } 
+          }, 
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      }
+    },
+    "/api/pronto/enrichments/contact": {
+      "post": { 
+        "summary": "Single contact enrichment", 
+        "description": "Enriches a single contact with email and phone data",
+        "tags": ["Pronto"], 
+        "requestBody": { 
+          "required": true, 
+          "content": { 
+            "application/json": { 
+              "schema": { 
+                "type": "object",
+                "properties": {
+                  "first_name": { "type": "string", "description": "Contact's first name" },
+                  "last_name": { "type": "string", "description": "Contact's last name" },
+                  "company": { "type": "string", "description": "Contact's company" },
+                  "domain": { "type": "string", "description": "Company domain" }
+                },
+                "required": ["first_name", "last_name", "company"]
+              },
+              "example": {
+                "first_name": "John",
+                "last_name": "Doe",
+                "company": "TechCorp",
+                "domain": "techcorp.com"
+              }
+            } 
+          } 
+        }, 
+        "responses": { 
+          "200": { 
+            "description": "Enriched contact data", 
+            "content": { 
+              "application/json": { 
+                "schema": { "$ref": "#/components/schemas/ProntoContact" },
+                "example": {
+                  "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                  "first_name": "John",
+                  "last_name": "Doe",
+                  "email": "john.doe@techcorp.com",
+                  "phone": "+33123456789",
+                  "job_title": "Software Engineer",
+                  "company": "TechCorp",
+                  "linkedin_url": "https://linkedin.com/in/johndoe"
+                }
+              } 
+            } 
+          }, 
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      }
+    },
+    "/api/pronto/enrichments/contacts/bulk": {
+      "post": { 
+        "summary": "Bulk contact enrichment", 
+        "description": "Enriches multiple contacts with email and phone data in batch",
+        "tags": ["Pronto"], 
+        "requestBody": { 
+          "required": true, 
+          "content": { 
+            "application/json": { 
+              "schema": { 
+                "type": "object",
+                "properties": {
+                  "contacts": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "first_name": { "type": "string", "description": "Contact's first name" },
+                        "last_name": { "type": "string", "description": "Contact's last name" },
+                        "company": { "type": "string", "description": "Contact's company" },
+                        "domain": { "type": "string", "description": "Company domain" }
+                      },
+                      "required": ["first_name", "last_name", "company"]
+                    }
+                  }
+                },
+                "required": ["contacts"]
+              },
+              "example": {
+                "contacts": [
+                  {
+                    "first_name": "John",
+                    "last_name": "Doe",
+                    "company": "TechCorp",
+                    "domain": "techcorp.com"
+                  },
+                  {
+                    "first_name": "Jane",
+                    "last_name": "Smith",
+                    "company": "TechCorp",
+                    "domain": "techcorp.com"
+                  }
+                ]
+              }
+            } 
+          } 
+        }, 
+        "responses": { 
+          "200": { 
+            "description": "Bulk enriched contact data", 
+            "content": { 
+              "application/json": { 
+                "schema": { 
+                  "type": "object",
+                  "properties": {
+                    "enriched_contacts": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ProntoContact"
+                      }
+                    },
+                    "total_processed": { "type": "integer", "description": "Total number of contacts processed" },
+                    "successful": { "type": "integer", "description": "Number of successfully enriched contacts" }
+                  }
+                },
+                "example": {
+                  "enriched_contacts": [
+                    {
+                      "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                      "first_name": "John",
+                      "last_name": "Doe",
+                      "email": "john.doe@techcorp.com",
+                      "phone": "+33123456789",
+                      "job_title": "Software Engineer",
+                      "company": "TechCorp",
+                      "linkedin_url": "https://linkedin.com/in/johndoe"
+                    }
+                  ],
+                  "total_processed": 2,
+                  "successful": 1
+                }
+              } 
+            } 
+          }, 
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      }
+    },
+    "/api/pronto/intent/hiring": {
+      "post": { 
+        "summary": "Find companies hiring", 
+        "description": "Identifies companies that are currently hiring based on job postings and recruitment activity",
+        "tags": ["Pronto"], 
+        "requestBody": { 
+          "required": true, 
+          "content": { 
+            "application/json": { 
+              "schema": { 
+                "type": "object",
+                "properties": {
+                  "filters": {
+                    "type": "object",
+                    "properties": {
+                      "industry": { "type": "string", "description": "Industry filter" },
+                      "location": { "type": "string", "description": "Location filter" },
+                      "size": { "type": "string", "description": "Company size filter" },
+                      "job_titles": { "type": "array", "items": { "type": "string" }, "description": "Specific job titles to look for" }
+                    }
+                  },
+                  "limit": { "type": "integer", "description": "Maximum number of results to return" }
+                }
+              },
+              "example": {
+                "filters": {
+                  "industry": "Technology",
+                  "location": "Paris, France",
+                  "job_titles": ["Software Engineer", "Product Manager"]
+                },
+                "limit": 10
+              }
+            } 
+          } 
+        }, 
+        "responses": { 
+          "200": { 
+            "description": "Companies hiring", 
+            "content": { 
+              "application/json": { 
+                "schema": { 
+                  "type": "object",
+                  "properties": {
+                    "hiring_companies": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "company": { "$ref": "#/components/schemas/ProntoAccount" },
+                          "job_count": { "type": "integer", "description": "Number of open positions" },
+                          "recent_postings": { "type": "array", "items": { "type": "string" }, "description": "Recent job titles posted" }
+                        }
+                      }
+                    },
+                    "total": { "type": "integer", "description": "Total number of hiring companies found" }
+                  }
+                },
+                "example": {
+                  "hiring_companies": [
+                    {
+                      "company": {
+                        "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                        "name": "TechCorp",
+                        "industry": "Technology",
+                        "size": "10-50",
+                        "location": "Paris, France"
+                      },
+                      "job_count": 5,
+                      "recent_postings": ["Software Engineer", "Product Manager"]
+                    }
+                  ],
+                  "total": 1
+                }
+              } 
+            } 
+          }, 
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      }
+    },
+    "/api/pronto/intent/growing": {
+      "post": { 
+        "summary": "Find companies growing", 
+        "description": "Identifies companies that are experiencing growth based on hiring, funding, and expansion indicators",
+        "tags": ["Pronto"], 
+        "requestBody": { 
+          "required": true, 
+          "content": { 
+            "application/json": { 
+              "schema": { 
+                "type": "object",
+                "properties": {
+                  "filters": {
+                    "type": "object",
+                    "properties": {
+                      "industry": { "type": "string", "description": "Industry filter" },
+                      "location": { "type": "string", "description": "Location filter" },
+                      "growth_type": { "type": "string", "enum": ["hiring", "funding", "expansion"], "description": "Type of growth to focus on" }
+                    }
+                  },
+                  "limit": { "type": "integer", "description": "Maximum number of results to return" }
+                }
+              },
+              "example": {
+                "filters": {
+                  "industry": "Technology",
+                  "location": "Paris, France",
+                  "growth_type": "hiring"
+                },
+                "limit": 10
+              }
+            } 
+          } 
+        }, 
+        "responses": { 
+          "200": { 
+            "description": "Growing companies", 
+            "content": { 
+              "application/json": { 
+                "schema": { 
+                  "type": "object",
+                  "properties": {
+                    "growing_companies": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "company": { "$ref": "#/components/schemas/ProntoAccount" },
+                          "growth_indicators": { "type": "array", "items": { "type": "string" }, "description": "Signs of growth" },
+                          "growth_score": { "type": "number", "description": "Growth score (0-100)" }
+                        }
+                      }
+                    },
+                    "total": { "type": "integer", "description": "Total number of growing companies found" }
+                  }
+                },
+                "example": {
+                  "growing_companies": [
+                    {
+                      "company": {
+                        "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                        "name": "TechCorp",
+                        "industry": "Technology",
+                        "size": "10-50",
+                        "location": "Paris, France"
+                      },
+                      "growth_indicators": ["Recent hiring", "New office opening"],
+                      "growth_score": 85
+                    }
+                  ],
+                  "total": 1
+                }
+              } 
+            } 
+          }, 
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      }
+    },
+    "/api/pronto/intent/lookalikes": {
+      "post": { 
+        "summary": "Find companies lookalikes", 
+        "description": "Finds companies similar to a target company based on industry, size, and characteristics",
+        "tags": ["Pronto"], 
+        "requestBody": { 
+          "required": true, 
+          "content": { 
+            "application/json": { 
+              "schema": { 
+                "type": "object",
+                "properties": {
+                  "target_company": { "type": "string", "description": "Name of the target company" },
+                  "filters": {
+                    "type": "object",
+                    "properties": {
+                      "location": { "type": "string", "description": "Location filter" },
+                      "size_range": { "type": "string", "description": "Size range filter" }
+                    }
+                  },
+                  "limit": { "type": "integer", "description": "Maximum number of results to return" }
+                },
+                "required": ["target_company"]
+              },
+              "example": {
+                "target_company": "Google",
+                "filters": {
+                  "location": "Paris, France",
+                  "size_range": "10-50"
+                },
+                "limit": 10
+              }
+            } 
+          } 
+        }, 
+        "responses": { 
+          "200": { 
+            "description": "Similar companies", 
+            "content": { 
+              "application/json": { 
+                "schema": { 
+                  "type": "object",
+                  "properties": {
+                    "similar_companies": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "company": { "$ref": "#/components/schemas/ProntoAccount" },
+                          "similarity_score": { "type": "number", "description": "Similarity score (0-100)" },
+                          "common_characteristics": { "type": "array", "items": { "type": "string" }, "description": "Shared characteristics" }
+                        }
+                      }
+                    },
+                    "total": { "type": "integer", "description": "Total number of similar companies found" }
+                  }
+                },
+                "example": {
+                  "similar_companies": [
+                    {
+                      "company": {
+                        "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                        "name": "TechCorp",
+                        "industry": "Technology",
+                        "size": "10-50",
+                        "location": "Paris, France"
+                      },
+                      "similarity_score": 85,
+                      "common_characteristics": ["Same industry", "Similar size", "Same location"]
+                    }
+                  ],
+                  "total": 1
+                }
+              } 
+            } 
+          }, 
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      }
+    },
+    "/api/pronto/intent/new-hires": {
+      "post": { 
+        "summary": "Find new hires", 
+        "description": "Identifies people who have recently started new positions at companies",
+        "tags": ["Pronto"], 
+        "requestBody": { 
+          "required": true, 
+          "content": { 
+            "application/json": { 
+              "schema": { 
+                "type": "object",
+                "properties": {
+                  "filters": {
+                    "type": "object",
+                    "properties": {
+                      "company": { "type": "string", "description": "Company filter" },
+                      "job_title": { "type": "string", "description": "Job title filter" },
+                      "location": { "type": "string", "description": "Location filter" },
+                      "time_period": { "type": "string", "enum": ["1_month", "3_months", "6_months"], "description": "Time period for new hires" }
+                    }
+                  },
+                  "limit": { "type": "integer", "description": "Maximum number of results to return" }
+                }
+              },
+              "example": {
+                "filters": {
+                  "company": "Google",
+                  "job_title": "Software Engineer",
+                  "time_period": "3_months"
+                },
+                "limit": 10
+              }
+            } 
+          } 
+        }, 
+        "responses": { 
+          "200": { 
+            "description": "New hires data", 
+            "content": { 
+              "application/json": { 
+                "schema": { 
+                  "type": "object",
+                  "properties": {
+                    "new_hires": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "contact": { "$ref": "#/components/schemas/ProntoContact" },
+                          "start_date": { "type": "string", "format": "date", "description": "Start date at new position" },
+                          "previous_company": { "type": "string", "description": "Previous company" }
+                        }
+                      }
+                    },
+                    "total": { "type": "integer", "description": "Total number of new hires found" }
+                  }
+                },
+                "example": {
+                  "new_hires": [
+                    {
+                      "contact": {
+                        "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                        "first_name": "John",
+                        "last_name": "Doe",
+                        "email": "john.doe@google.com",
+                        "job_title": "Software Engineer",
+                        "company": "Google",
+                        "linkedin_url": "https://linkedin.com/in/johndoe"
+                      },
+                      "start_date": "2024-01-01",
+                      "previous_company": "Microsoft"
+                    }
+                  ],
+                  "total": 1
+                }
+              } 
+            } 
+          }, 
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      }
+    },
+    "/api/pronto/intent/job-changes": {
+      "post": { 
+        "summary": "Track job changes", 
+        "description": "Tracks people who have changed jobs or positions recently",
+        "tags": ["Pronto"], 
+        "requestBody": { 
+          "required": true, 
+          "content": { 
+            "application/json": { 
+              "schema": { 
+                "type": "object",
+                "properties": {
+                  "filters": {
+                    "type": "object",
+                    "properties": {
+                      "company": { "type": "string", "description": "Company filter" },
+                      "job_title": { "type": "string", "description": "Job title filter" },
+                      "location": { "type": "string", "description": "Location filter" },
+                      "time_period": { "type": "string", "enum": ["1_month", "3_months", "6_months"], "description": "Time period for job changes" }
+                    }
+                  },
+                  "limit": { "type": "integer", "description": "Maximum number of results to return" }
+                }
+              },
+              "example": {
+                "filters": {
+                  "company": "Google",
+                  "time_period": "3_months"
+                },
+                "limit": 10
+              }
+            } 
+          } 
+        }, 
+        "responses": { 
+          "200": { 
+            "description": "Job changes data", 
+            "content": { 
+              "application/json": { 
+                "schema": { 
+                  "type": "object",
+                  "properties": {
+                    "job_changes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "contact": { "$ref": "#/components/schemas/ProntoContact" },
+                          "change_date": { "type": "string", "format": "date", "description": "Date of job change" },
+                          "previous_position": { "type": "string", "description": "Previous job title" },
+                          "new_position": { "type": "string", "description": "New job title" },
+                          "previous_company": { "type": "string", "description": "Previous company" },
+                          "new_company": { "type": "string", "description": "New company" }
+                        }
+                      }
+                    },
+                    "total": { "type": "integer", "description": "Total number of job changes found" }
+                  }
+                },
+                "example": {
+                  "job_changes": [
+                    {
+                      "contact": {
+                        "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                        "first_name": "John",
+                        "last_name": "Doe",
+                        "email": "john.doe@google.com",
+                        "job_title": "Senior Software Engineer",
+                        "company": "Google",
+                        "linkedin_url": "https://linkedin.com/in/johndoe"
+                      },
+                      "change_date": "2024-01-01",
+                      "previous_position": "Software Engineer",
+                      "new_position": "Senior Software Engineer",
+                      "previous_company": "Google",
+                      "new_company": "Google"
+                    }
+                  ],
+                  "total": 1
+                }
+              } 
+            } 
+          }, 
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      }
+    },
+    "/api/pronto/credits": {
+      "get": { 
+        "summary": "Get current credit balance", 
+        "description": "Retrieves the current credit balance for your Pronto API account",
+        "tags": ["Pronto"], 
+        "responses": { 
+          "200": { 
+            "description": "Credit balance", 
+            "content": { 
+              "application/json": { 
+                "schema": { 
+                  "type": "object",
+                  "properties": {
+                    "credits": { "type": "integer", "description": "Current credit balance" },
+                    "credits_used": { "type": "integer", "description": "Total credits used" },
+                    "credits_total": { "type": "integer", "description": "Total credits purchased" }
+                  }
+                },
+                "example": {
+                  "credits": 950,
+                  "credits_used": 50,
+                  "credits_total": 1000
+                }
+              } 
+            } 
+          },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      }
+    },
+    "/api/pronto/account": {
+      "get": { 
+        "summary": "Get account information", 
+        "description": "Retrieves account information and settings for your Pronto API account",
+        "tags": ["Pronto"], 
+        "responses": { 
+          "200": { 
+            "description": "Account information", 
+            "content": { 
+              "application/json": { 
+                "schema": { 
+                  "type": "object",
+                  "properties": {
+                    "account_id": { "type": "string", "description": "Account identifier" },
+                    "email": { "type": "string", "description": "Account email" },
+                    "plan": { "type": "string", "description": "Current subscription plan" },
+                    "created_at": { "type": "string", "format": "date-time", "description": "Account creation date" },
+                    "settings": {
+                      "type": "object",
+                      "properties": {
+                        "timezone": { "type": "string", "description": "Account timezone" },
+                        "language": { "type": "string", "description": "Account language" }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "account_id": "acc_123456789",
+                  "email": "user@example.com",
+                  "plan": "Professional",
+                  "created_at": "2024-01-01T10:00:00.000Z",
+                  "settings": {
+                    "timezone": "Europe/Paris",
+                    "language": "en"
+                  }
+                }
+              } 
+            } 
+          },
+          "401": { "description": "Unauthorized - Invalid API key" },
+          "500": { "description": "Internal server error" }
+        } 
+      }
     }
   },
   "components": {
@@ -741,6 +2171,75 @@
           "status": { "type": "string", "description": "User's status" }
         },
         "required": ["name", "email", "role", "status"]
+      },
+      "ProntoPersona": {
+        "type": "object",
+        "properties": {
+          "uuid": { "type": "string", "format": "uuid", "description": "Unique identifier for the persona" },
+          "name": { "type": "string", "description": "Name of the persona" },
+          "job_titles": { 
+            "type": "array", 
+            "items": { "type": "string" }, 
+            "description": "List of job titles for this persona" 
+          },
+          "location": { 
+            "type": "array", 
+            "items": { "type": "string" }, 
+            "description": "List of locations for this persona" 
+          },
+          "created_at": { "type": "string", "format": "date-time", "description": "Creation timestamp" },
+          "updated_at": { "type": "string", "format": "date-time", "description": "Last update timestamp" }
+        },
+        "required": ["uuid", "name"]
+      },
+      "ProntoList": {
+        "type": "object",
+        "properties": {
+          "uuid": { "type": "string", "format": "uuid", "description": "Unique identifier for the list" },
+          "name": { "type": "string", "description": "Name of the list" },
+          "description": { "type": "string", "description": "Description of the list" },
+          "created_at": { "type": "string", "format": "date-time", "description": "Creation timestamp" },
+          "updated_at": { "type": "string", "format": "date-time", "description": "Last update timestamp" }
+        },
+        "required": ["uuid", "name"]
+      },
+      "ProntoSearch": {
+        "type": "object",
+        "properties": {
+          "uuid": { "type": "string", "format": "uuid", "description": "Unique identifier for the search" },
+          "name": { "type": "string", "description": "Name of the search" },
+          "query": { "type": "object", "description": "Search query parameters" },
+          "created_at": { "type": "string", "format": "date-time", "description": "Creation timestamp" },
+          "updated_at": { "type": "string", "format": "date-time", "description": "Last update timestamp" }
+        },
+        "required": ["uuid", "name"]
+      },
+      "ProntoAccount": {
+        "type": "object",
+        "properties": {
+          "uuid": { "type": "string", "format": "uuid", "description": "Unique identifier for the account" },
+          "name": { "type": "string", "description": "Company name" },
+          "website": { "type": "string", "description": "Company website" },
+          "linkedin_url": { "type": "string", "description": "LinkedIn URL" },
+          "industry": { "type": "string", "description": "Industry" },
+          "size": { "type": "string", "description": "Company size" },
+          "location": { "type": "string", "description": "Company location" }
+        },
+        "required": ["uuid", "name"]
+      },
+      "ProntoContact": {
+        "type": "object",
+        "properties": {
+          "uuid": { "type": "string", "format": "uuid", "description": "Unique identifier for the contact" },
+          "first_name": { "type": "string", "description": "Contact's first name" },
+          "last_name": { "type": "string", "description": "Contact's last name" },
+          "email": { "type": "string", "description": "Contact's email" },
+          "phone": { "type": "string", "description": "Contact's phone number" },
+          "job_title": { "type": "string", "description": "Contact's job title" },
+          "company": { "type": "string", "description": "Contact's company" },
+          "linkedin_url": { "type": "string", "description": "LinkedIn URL" }
+        },
+        "required": ["uuid", "first_name", "last_name"]
       }
     }
   },
@@ -756,6 +2255,10 @@
     {
       "name": "GraphQL",
       "description": "Operations performed via the GraphQL endpoint"
+    },
+    {
+      "name": "Pronto",
+      "description": "Pronto API endpoints for B2B prospecting and data enrichment"
     }
   ],
   "x-endpoint-descriptions": [

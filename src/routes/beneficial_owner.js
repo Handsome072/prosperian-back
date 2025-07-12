@@ -9,7 +9,7 @@ router.get('/', async (req, res) => {
   res.json(data);
 });
 
-// GET beneficial owner by id
+
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
   const { data, error } = await supabase.from('beneficial_owner').select('*').eq('id', id).single();
