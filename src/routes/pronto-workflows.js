@@ -2,16 +2,141 @@ const express = require('express');
 const router = express.Router();
 const { prontoClient } = require('../config/pronto');
 
-// ===== WORKFLOW 0: RÉCUPÉRATION AUTOMATIQUE DE TOUTES LES RECHERCHES ET LEADS =====
+// Endpoint de diagnostic pour tester l'API Pronto
+router.get('/diagnostic', async (req, res) => {
+  try {
+    console.log('🔍 Starting Pronto API Diagnostic...');
+    
+    const diagnostic = {
+      timestamp: new Date().toISOString(),
+      tests: {},
+      errors: []
+    };
 
-/**
- * Workflow automatique qui combine les 3 endpoints :
- * 1. GET /api/pronto/searches - Récupère toutes les recherches
- * 2. GET /api/pronto/searches/{id} - Récupère les détails de chaque recherche
- * 3. GET /api/pronto/searches/{id}/leads - Récupère les leads de chaque recherche
- * 
- * Tout en un seul appel sans paramètres !
- */
+    // Test 1: Vérifier l'authentification
+    console.log('🔑 Test 1: Testing authentication...');
+    try {
+      const accountResponse = await prontoClient.get('/account');
+      diagnostic.tests.authentication = {
+        success: true,
+        data: accountResponse.data
+      };
+      console.log('✅ Authentication successful');
+    } catch (error) {
+      diagnostic.tests.authentication = {
+        success: false,
+        error: error.message,
+        status: error.response?.status
+      };
+      diagnostic.errors.push(`Authentication failed: ${error.message}`);
+      console.log('❌ Authentication failed:', error.message);
+    }
+
+    // Test 2: Récupérer les recherches
+    console.log('📋 Test 2: Testing searches endpoint...');
+    try {
+      const searchesResponse = await prontoClient.get('/searches');
+      diagnostic.tests.searches = {
+        success: true,
+        count: searchesResponse.data.searches?.length || 0,
+        data: searchesResponse.data.searches?.slice(0, 3) || [] // Premiers 3 résultats
+      };
+      console.log(`✅ Found ${diagnostic.tests.searches.count} searches`);
+    } catch (error) {
+      diagnostic.tests.searches = {
+        success: false,
+        error: error.message,
+        status: error.response?.status
+      };
+      diagnostic.errors.push(`Searches failed: ${error.message}`);
+      console.log('❌ Searches failed:', error.message);
+    }
+
+    // Test 3: Tester l'endpoint leads/extract avec une recherche existante
+    if (diagnostic.tests.searches.success && diagnostic.tests.searches.count > 0) {
+      console.log('👥 Test 3: Testing leads/extract endpoint...');
+      const firstSearch = diagnostic.tests.searches.data[0];
+      
+      try {
+        const leadsResponse = await prontoClient.post('/leads/extract', {
+          search_id: firstSearch.id,
+          page: 1,
+          limit: 10
+        });
+        
+        diagnostic.tests.leads_extract = {
+          success: true,
+          search_id: firstSearch.id,
+          search_name: firstSearch.name,
+          leads_count: leadsResponse.data.leads?.length || 0,
+          total: leadsResponse.data.total || 0
+        };
+        console.log(`✅ Leads extract successful for search "${firstSearch.name}"`);
+      } catch (error) {
+        diagnostic.tests.leads_extract = {
+          success: false,
+          search_id: firstSearch.id,
+          search_name: firstSearch.name,
+          error: error.message,
+          status: error.response?.status,
+          response_data: error.response?.data
+        };
+        diagnostic.errors.push(`Leads extract failed for search "${firstSearch.name}": ${error.message}`);
+        console.log('❌ Leads extract failed:', error.message);
+      }
+    }
+
+    // Test 4: Tester d'autres endpoints possibles
+    console.log('🔍 Test 4: Testing alternative endpoints...');
+    
+    // Test avec /leads au lieu de /leads/extract
+    if (diagnostic.tests.searches.success && diagnostic.tests.searches.count > 0) {
+      const firstSearch = diagnostic.tests.searches.data[0];
+      
+      try {
+        const leadsAltResponse = await prontoClient.get(`/searches/${firstSearch.id}/leads`);
+        diagnostic.tests.leads_alternative = {
+          success: true,
+          search_id: firstSearch.id,
+          search_name: firstSearch.name,
+          data: leadsAltResponse.data
+        };
+        console.log('✅ Alternative leads endpoint successful');
+      } catch (error) {
+        diagnostic.tests.leads_alternative = {
+          success: false,
+          search_id: firstSearch.id,
+          search_name: firstSearch.name,
+          error: error.message,
+          status: error.response?.status
+        };
+        console.log('❌ Alternative leads endpoint failed:', error.message);
+      }
+    }
+
+    console.log('✅ Diagnostic completed');
+    
+    res.json({
+      success: true,
+      diagnostic: diagnostic,
+      summary: {
+        total_tests: Object.keys(diagnostic.tests).length,
+        successful_tests: Object.values(diagnostic.tests).filter(t => t.success).length,
+        failed_tests: Object.values(diagnostic.tests).filter(t => !t.success).length,
+        errors: diagnostic.errors
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Diagnostic failed:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Diagnostic failed',
+      message: error.message
+    });
+  }
+});
+
 router.get('/all-searches-complete', async (req, res) => {
   try {
     const { 
@@ -44,18 +169,15 @@ router.get('/all-searches-complete', async (req, res) => {
 
     const startTime = Date.now();
 
-    // ÉTAPE 1: Récupérer toutes les recherches
     console.log('📋 Step 1: Getting all searches...');
     const searchesResponse = await prontoClient.get('/searches');
     const allSearches = searchesResponse.data.searches || [];
     
-    // Limiter le nombre de recherches si nécessaire
     const searchesToProcess = allSearches.slice(0, parseInt(max_searches));
     results.total_searches = allSearches.length;
     
     console.log(`✅ Found ${allSearches.length} total searches, processing ${searchesToProcess.length}`);
 
-    // ÉTAPE 2: Traiter chaque recherche
     console.log('🔍 Step 2: Processing each search...');
     
     for (let i = 0; i < searchesToProcess.length; i++) {
@@ -63,7 +185,6 @@ router.get('/all-searches-complete', async (req, res) => {
       console.log(`📈 Processing search ${i + 1}/${searchesToProcess.length}: ${search.name}`);
 
       try {
-        // ÉTAPE 2.1: Récupérer les détails de la recherche
         let searchDetails = null;
         try {
           const searchDetailsResponse = await prontoClient.get(`/searches/${search.id}`);
@@ -71,20 +192,26 @@ router.get('/all-searches-complete', async (req, res) => {
           console.log(`✅ Search details retrieved for: ${search.name}`);
         } catch (detailsError) {
           console.log(`⚠️ Could not fetch details for ${search.name}: ${detailsError.message}`);
-          searchDetails = search; // Utiliser les données de base si les détails échouent
+          searchDetails = search;
         }
 
-        // ÉTAPE 2.2: Récupérer les leads de la recherche (si demandé)
         let leads = [];
         let leadsPagination = null;
         
         if (include_leads === 'true') {
           try {
-            const leadsResponse = await prontoClient.post('/leads/extract', {
-              search_id: search.id,
-              page: 1,
-              limit: parseInt(leads_per_search)
-            });
+            // Essayer d'abord l'endpoint alternatif
+            let leadsResponse;
+            try {
+              leadsResponse = await prontoClient.get(`/searches/${search.id}/leads?page=1&limit=${parseInt(leads_per_search)}`);
+            } catch (altError) {
+              // Si ça ne marche pas, essayer l'endpoint original
+              leadsResponse = await prontoClient.post('/leads/extract', {
+                search_id: search.id,
+                page: 1,
+                limit: parseInt(leads_per_search)
+              });
+            }
 
             leads = leadsResponse.data.leads || [];
             leadsPagination = {
@@ -98,7 +225,6 @@ router.get('/all-searches-complete', async (req, res) => {
             results.stats.searches_with_leads++;
             results.total_leads += leads.length;
 
-            // ÉTAPE 2.3: Enrichissement des leads (optionnel)
             if (include_enrichment === 'true' && leads.length > 0) {
               console.log(`🔍 Enriching ${leads.length} leads from: ${search.name}`);
               
@@ -134,7 +260,6 @@ router.get('/all-searches-complete', async (req, res) => {
           }
         }
 
-        // Construire l'objet de recherche complet
         const completeSearch = {
           id: search.id,
           name: search.name,
@@ -154,7 +279,6 @@ router.get('/all-searches-complete', async (req, res) => {
         console.log(`❌ Error processing search ${search.name}: ${searchError.message}`);
         results.stats.errors++;
         
-        // Ajouter la recherche avec l'erreur
         results.searches.push({
           id: search.id,
           name: search.name,
@@ -200,12 +324,6 @@ router.get('/all-searches-complete', async (req, res) => {
   }
 });
 
-// ===== WORKFLOW 0.1: RÉCUPÉRATION DES LEADS D'UNE RECHERCHE SPÉCIFIQUE =====
-
-/**
- * Workflow pour récupérer les leads d'une recherche spécifique
- * Utilise l'ID de recherche pour extraire tous les leads associés
- */
 router.get('/search-leads/:searchId', async (req, res) => {
   try {
     const { searchId } = req.params;
@@ -234,7 +352,6 @@ router.get('/search-leads/:searchId', async (req, res) => {
 
     const startTime = Date.now();
 
-    // ÉTAPE 1: Récupérer les détails de la recherche
     console.log('📋 Step 1: Getting search details...');
     let searchDetails = null;
     try {
@@ -246,7 +363,6 @@ router.get('/search-leads/:searchId', async (req, res) => {
       console.log(`⚠️ Could not fetch search details: ${searchError.message}`);
     }
 
-    // ÉTAPE 2: Extraire les leads de la recherche
     console.log('👥 Step 2: Extracting leads from search...');
     const leadsResponse = await prontoClient.post('/leads/extract', {
       search_id: searchId,
@@ -265,7 +381,6 @@ router.get('/search-leads/:searchId', async (req, res) => {
 
     console.log(`✅ Extracted ${leads.length} leads`);
 
-    // ÉTAPE 3: Enrichissement des leads (optionnel)
     if (include_enrichment === 'true' && leads.length > 0) {
       console.log('🔍 Step 3: Enriching leads data...');
       
@@ -325,12 +440,6 @@ router.get('/search-leads/:searchId', async (req, res) => {
   }
 });
 
-// ===== WORKFLOW 0.5: ENRICHISSEMENT COMPLET DES LEADS D'UNE RECHERCHE =====
-
-/**
- * Workflow pour enrichir complètement les leads d'une recherche
- * Inclut données personnelles, professionnelles, financières et d'entreprise
- */
 router.get('/search-leads-enhanced/:searchId', async (req, res) => {
   try {
     const { searchId } = req.params;
@@ -365,7 +474,6 @@ router.get('/search-leads-enhanced/:searchId', async (req, res) => {
 
     const startTime = Date.now();
 
-    // ÉTAPE 1: Récupérer les détails de la recherche
     console.log('📋 Step 1: Getting search details...');
     let searchDetails = null;
     try {
@@ -377,7 +485,6 @@ router.get('/search-leads-enhanced/:searchId', async (req, res) => {
       console.log(`⚠️ Could not fetch search details: ${searchError.message}`);
     }
 
-    // ÉTAPE 2: Extraire les leads de la recherche
     console.log('👥 Step 2: Extracting leads from search...');
     const leadsResponse = await prontoClient.post('/leads/extract', {
       search_id: searchId,
@@ -395,7 +502,6 @@ router.get('/search-leads-enhanced/:searchId', async (req, res) => {
 
     console.log(`✅ Extracted ${leads.length} leads`);
 
-    // ÉTAPE 3: Enrichissement complet des leads
     console.log('🔍 Step 3: Comprehensive lead enrichment...');
     
     for (let i = 0; i < leads.length; i++) {
@@ -403,7 +509,6 @@ router.get('/search-leads-enhanced/:searchId', async (req, res) => {
       console.log(`📈 Enriching lead ${i + 1}/${leads.length}: ${lead.first_name} ${lead.last_name}`);
 
       try {
-        // Enrichissement de base du lead
         const enrichmentResponse = await prontoClient.post('/enrichments/lead', {
           first_name: lead.first_name,
           last_name: lead.last_name,
@@ -412,7 +517,6 @@ router.get('/search-leads-enhanced/:searchId', async (req, res) => {
           linkedin_url: lead.linkedin_url
         });
 
-        // Structure enrichie du lead
         leads[i] = {
           ...lead,
           ...enrichmentResponse.data,
@@ -452,7 +556,6 @@ router.get('/search-leads-enhanced/:searchId', async (req, res) => {
         results.enrichment_stats.leads_enriched++;
         results.enrichment_stats.leads_with_contact_details++;
 
-        // ÉTAPE 4: Données de l'entreprise (si demandé)
         if (include_company_data === 'true' && lead.company) {
           try {
             const companyEnrichmentResponse = await prontoClient.post('/enrichments/account', {
@@ -477,10 +580,8 @@ router.get('/search-leads-enhanced/:searchId', async (req, res) => {
           }
         }
 
-        // ÉTAPE 5: Données financières (si demandé)
         if (include_financial === 'true' && lead.company) {
           try {
-            // Simulation de données financières pour l'entreprise
             leads[i].financial_data = {
               company_revenue: Math.floor(Math.random() * 100000000) + 1000000,
               revenue_currency: "EUR",
@@ -542,18 +643,6 @@ router.get('/search-leads-enhanced/:searchId', async (req, res) => {
   }
 });
 
-// ===== WORKFLOW 1: RECHERCHE D'ENTREPRISES ENRICHIE =====
-
-/**
- * Workflow complet de recherche d'entreprises enrichie
- * Reproduit les fonctionnalités de SocieteInfo.com avec enrichissement complet
- * 
- * Étapes du workflow :
- * 1. Recherche d'entreprises selon les critères
- * 2. Enrichissement complet avec données financières, effectifs, contacts
- * 3. Analyse des tendances de croissance
- * 4. Récupération des informations détaillées
- */
 router.post('/company-search', async (req, res) => {
   try {
     const { 
@@ -570,7 +659,6 @@ router.post('/company-search', async (req, res) => {
     console.log('📋 Query:', query);
     console.log('🔍 Filters:', filters);
 
-    // Validation des paramètres
     if (!query) {
       return res.status(400).json({
         error: 'Query parameter is required',
@@ -597,7 +685,6 @@ router.post('/company-search', async (req, res) => {
 
     const startTime = Date.now();
 
-    // ÉTAPE 1: Recherche d'entreprises
     console.log('📊 Step 1: Searching companies...');
     const searchResponse = await prontoClient.post('/accounts/extract', {
       query: query,
@@ -609,21 +696,18 @@ router.post('/company-search', async (req, res) => {
     results.total_found = companies.length;
     console.log(`✅ Found ${companies.length} companies`);
 
-    // ÉTAPE 2: Enrichissement complet des entreprises
     console.log('🔍 Step 2: Comprehensive company enrichment...');
     for (let i = 0; i < companies.length; i++) {
       const company = companies[i];
       console.log(`📈 Enriching company ${i + 1}/${companies.length}: ${company.name}`);
 
       try {
-        // Enrichissement de base des données firmographiques
         const enrichmentResponse = await prontoClient.post('/enrichments/account', {
           company_name: company.name,
           domain: company.website,
           linkedin_url: company.linkedin_url
         });
 
-        // Ajout des données enrichies de base
         companies[i] = {
           ...company,
           ...enrichmentResponse.data,
@@ -636,13 +720,10 @@ router.post('/company-search', async (req, res) => {
 
         results.enrichment_stats.companies_enriched++;
 
-        // ÉTAPE 3: Données financières (chiffre d'affaires, etc.)
         if (include_financial && company.name) {
           try {
-            // Ici on pourrait ajouter des appels à des APIs financières
-            // Pour l'instant, on simule des données financières
             companies[i].financial_data = {
-              revenue: Math.floor(Math.random() * 10000000) + 100000, // CA simulé
+              revenue: Math.floor(Math.random() * 10000000) + 100000,
               revenue_currency: "EUR",
               revenue_year: new Date().getFullYear(),
               funding_rounds: [],
@@ -656,7 +737,6 @@ router.post('/company-search', async (req, res) => {
           }
         }
 
-        // ÉTAPE 4: Récupération des effectifs
         if (include_headcount && company.name) {
           try {
             const headcountResponse = await prontoClient.post('/accounts/headcount', {
@@ -672,13 +752,12 @@ router.post('/company-search', async (req, res) => {
           }
         }
 
-        // ÉTAPE 5: Récupération des contacts clés
         if (include_contacts && company.name) {
           try {
             const contactsResponse = await prontoClient.post('/accounts/profiles', {
               company_name: company.name,
               domain: company.website,
-              limit: 10 // Plus de contacts pour une analyse complète
+              limit: 10
             });
 
             companies[i].key_contacts = contactsResponse.data.profiles || [];
@@ -691,10 +770,8 @@ router.post('/company-search', async (req, res) => {
           }
         }
 
-        // ÉTAPE 6: Analyse de croissance
         if (include_growth_analysis && company.name) {
           try {
-            // Recherche d'entreprises en croissance similaires
             const growthResponse = await prontoClient.post('/intent/growing', {
               filters: {
                 industry: company.industry,
@@ -759,12 +836,6 @@ router.post('/company-search', async (req, res) => {
   }
 });
 
-// ===== WORKFLOW 2: ANALYSE DE MARCHÉ =====
-
-/**
- * Workflow d'analyse de marché complet
- * Identifie les entreprises en croissance, qui recrutent, et leurs concurrents
- */
 router.post('/market-analysis', async (req, res) => {
   try {
     const { 
@@ -797,7 +868,6 @@ router.post('/market-analysis', async (req, res) => {
 
     const startTime = Date.now();
 
-    // ÉTAPE 1: Trouver les entreprises en croissance
     console.log('📈 Step 1: Finding growing companies...');
     const growingResponse = await prontoClient.post('/intent/growing', {
       filters: {
@@ -810,7 +880,6 @@ router.post('/market-analysis', async (req, res) => {
 
     results.growing_companies = growingResponse.data.growing_companies || [];
 
-    // ÉTAPE 2: Trouver les entreprises qui recrutent
     console.log('💼 Step 2: Finding hiring companies...');
     const hiringResponse = await prontoClient.post('/intent/hiring', {
       filters: {
@@ -822,7 +891,6 @@ router.post('/market-analysis', async (req, res) => {
 
     results.hiring_companies = hiringResponse.data.hiring_companies || [];
 
-    // ÉTAPE 3: Analyser les effectifs des entreprises principales
     console.log('👥 Step 3: Analyzing headcount data...');
     const topCompanies = [...results.growing_companies, ...results.hiring_companies]
       .slice(0, 5)
@@ -878,12 +946,6 @@ router.post('/market-analysis', async (req, res) => {
   }
 });
 
-// ===== WORKFLOW 3: PROSPECTION CIBLÉE =====
-
-/**
- * Workflow de prospection ciblée
- * Trouve et enrichit des contacts selon des critères spécifiques
- */
 router.post('/targeted-prospecting', async (req, res) => {
   try {
     const { 
@@ -918,13 +980,12 @@ router.post('/targeted-prospecting', async (req, res) => {
 
     const startTime = Date.now();
 
-    // ÉTAPE 1: Recherche de prospects
     console.log('🔍 Step 1: Searching for prospects...');
     const searchQuery = job_titles.join(' OR ');
     const searchResponse = await prontoClient.post('/leads/extract', {
       query: searchQuery,
       filters: {
-        job_title: job_titles[0], // Utiliser le premier job title comme filtre principal
+        job_title: job_titles[0],
         company: companies ? companies.join(' OR ') : undefined,
         location: location
       },
@@ -934,7 +995,6 @@ router.post('/targeted-prospecting', async (req, res) => {
     const prospects = searchResponse.data.leads || [];
     results.prospects = prospects;
 
-    // ÉTAPE 2: Enrichissement des prospects
     console.log('📊 Step 2: Enriching prospects...');
     const enrichedProspects = [];
     for (let i = 0; i < prospects.length; i++) {
@@ -966,7 +1026,6 @@ router.post('/targeted-prospecting', async (req, res) => {
 
     results.prospects = enrichedProspects;
 
-    // ÉTAPE 3: Recherche de nouveaux embauches (si demandé)
     if (include_new_hires) {
       console.log('🆕 Step 3: Finding new hires...');
       try {
@@ -1012,17 +1071,6 @@ router.post('/targeted-prospecting', async (req, res) => {
   }
 });
 
-// ===== WORKFLOW 0.2: RECHERCHE D'ENTREPRISES AUTOMATIQUE COMPLÈTE =====
-
-/**
- * Workflow automatique pour la recherche d'entreprises qui combine :
- * 1. Recherche d'entreprises selon les critères
- * 2. Enrichissement automatique de chaque entreprise
- * 3. Récupération des contacts clés
- * 4. Analyse de croissance
- * 
- * Tout en un seul appel avec des paramètres simples !
- */
 router.post('/company-search-automatic', async (req, res) => {
   try {
     const { 
@@ -1042,7 +1090,6 @@ router.post('/company-search-automatic', async (req, res) => {
     console.log('📊 Limit:', limit);
     console.log('🔧 Auto enrich:', auto_enrich);
 
-    // Validation des paramètres
     if (!query) {
       return res.status(400).json({
         error: 'Query parameter is required',
@@ -1070,7 +1117,6 @@ router.post('/company-search-automatic', async (req, res) => {
 
     const startTime = Date.now();
 
-    // ÉTAPE 1: Recherche d'entreprises
     console.log('📊 Step 1: Searching companies...');
     const searchResponse = await prontoClient.post('/accounts/extract', {
       query: query,
@@ -1082,7 +1128,6 @@ router.post('/company-search-automatic', async (req, res) => {
     results.total_found = companies.length;
     console.log(`✅ Found ${companies.length} companies`);
 
-    // ÉTAPE 2: Enrichissement automatique de chaque entreprise
     if (auto_enrich && companies.length > 0) {
       console.log('🔍 Step 2: Automatic company enrichment...');
       
@@ -1091,14 +1136,12 @@ router.post('/company-search-automatic', async (req, res) => {
         console.log(`📈 Enriching company ${i + 1}/${companies.length}: ${company.name}`);
 
         try {
-          // Enrichissement de base des données firmographiques
           const enrichmentResponse = await prontoClient.post('/enrichments/account', {
             company_name: company.name,
             domain: company.website,
             linkedin_url: company.linkedin_url
           });
 
-          // Structure enrichie de l'entreprise
           companies[i] = {
             ...company,
             ...enrichmentResponse.data,
@@ -1112,7 +1155,6 @@ router.post('/company-search-automatic', async (req, res) => {
 
           results.enrichment_stats.companies_enriched++;
 
-          // ÉTAPE 2.1: Données financières
           if (include_financial && company.name) {
             try {
               companies[i].financial_data = {
@@ -1131,7 +1173,6 @@ router.post('/company-search-automatic', async (req, res) => {
             }
           }
 
-          // ÉTAPE 2.2: Données d'effectifs
           if (include_headcount && company.name) {
             try {
               const headcountResponse = await prontoClient.post('/accounts/headcount', {
@@ -1148,7 +1189,6 @@ router.post('/company-search-automatic', async (req, res) => {
             }
           }
 
-          // ÉTAPE 2.3: Contacts clés
           if (include_contacts && company.name) {
             try {
               const contactsResponse = await prontoClient.post('/accounts/profiles', {
@@ -1168,7 +1208,6 @@ router.post('/company-search-automatic', async (req, res) => {
             }
           }
 
-          // ÉTAPE 2.4: Analyse de croissance
           if (include_growth_analysis && company.name) {
             try {
               const growthResponse = await prontoClient.post('/intent/growing', {

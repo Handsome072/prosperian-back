@@ -1,13 +1,36 @@
-const express = require('express');
-const swaggerUi = require('swagger-ui-express');
-const { readFileSync } = require('fs');
-const { resolve } = require('path');
+const swaggerJsdoc = require('swagger-jsdoc');
 
-const app = express();
-const swaggerDocument = JSON.parse(readFileSync(resolve(__dirname, '../swagger.json'), 'utf8'));
+const options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Prosperian API',
+      version: '1.0.0',
+      description: 'API for Prosperian business intelligence platform',
+      contact: {
+        name: 'Prosperian Team',
+        email: 'contact@prosperian.com'
+      }
+    },
+    servers: [
+      {
+        url: 'http://localhost:3000',
+        description: 'Development server'
+      }
+    ],
+    components: {
+      securitySchemes: {
+        ApiKeyAuth: {
+          type: 'apiKey',
+          in: 'header',
+          name: 'X-API-KEY'
+        }
+      }
+    }
+  },
+  apis: ['./src/routes/*.js']
+};
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+const specs = swaggerJsdoc(options);
 
-app.listen(process.env.PORT || 4000, () => {
-  console.log('Swagger UI available at http://localhost:4000/api-docs');
-});
+module.exports = specs;
