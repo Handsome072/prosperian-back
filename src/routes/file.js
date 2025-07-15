@@ -4,6 +4,18 @@ const supabase = require('../config/supabase');
 const fs = require('fs');
 const path = require('path');
 
+// GET all exports (placé avant toute route paramétrée)
+router.get('/export', async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('export').select('*').order('created_at', { ascending: false });
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
+  } catch (err) {
+    console.error('Erreur lors de la récupération des exports:', err);
+    res.status(500).json({ error: 'Erreur lors de la récupération des exports' });
+  }
+});
+
 // GET all files
 router.get('/', async (req, res) => {
   const { data, error } = await supabase.from('file').select('*');
@@ -61,13 +73,15 @@ router.post('/', async (req, res) => {
 // POST create export record
 router.post('/export', async (req, res) => {
   try {
-    const { file, path } = req.body;
+    const { file, path, type, ligne } = req.body;
     if (!file || !Array.isArray(path) || path.length === 0) {
       return res.status(400).json({ error: 'file (string) and path (array) are required' });
     }
     const dbInput = {
       file,
       path,
+      type: type || null,
+      ligne: typeof ligne === 'number' ? ligne : null,
       created_at: new Date().toISOString()
     };
     const { data, error } = await supabase.from('export').insert(dbInput).select('*').single();

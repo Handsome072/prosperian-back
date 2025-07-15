@@ -3124,6 +3124,45 @@
       }
     },
     "/api/file/export": {
+      "get": {
+        "summary": "Lister les exports de fichiers",
+        "description": "Retourne la liste de tous les exports (table export)",
+        "tags": ["Export"],
+        "responses": {
+          "200": {
+            "description": "Liste des exports",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "integer" },
+                      "file": { "type": "string" },
+                      "path": { "type": "array", "items": { "type": "string" } },
+                      "type": { "type": "string" },
+                      "ligne": { "type": "integer" },
+                      "created_at": { "type": "string", "format": "date-time" }
+                    }
+                  }
+                },
+                "example": [
+                  {
+                    "id": 1,
+                    "file": "export",
+                    "path": ["/public/file/export.csv", "/public/file/export.xlsx"],
+                    "type": "entreprise",
+                    "ligne": 42,
+                    "created_at": "2024-07-15T10:00:00.000Z"
+                  }
+                ]
+              }
+            }
+          },
+          "500": { "description": "Erreur serveur" }
+        }
+      },
       "post": {
         "summary": "Ajouter un export de fichier (nom et chemins)",
         "description": "Ajoute un enregistrement dans la table 'export' avec le nom du fichier (sans extension) et un tableau de chemins (CSV, XLSX, etc).",

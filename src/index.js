@@ -14,6 +14,9 @@ const PORT = process.env.PORT || 4000;
 
 app.use(cors());
 app.use(express.json());
+const staticPath = path.join(__dirname, '../public');
+console.log('Static files served from:', staticPath);
+app.use('/public', express.static(staticPath));
 
 const schemaPath = path.join(__dirname, 'schema', 'schema.graphql');
 const schemaContent = fs.readFileSync(schemaPath, 'utf8');
