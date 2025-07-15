@@ -74,8 +74,8 @@ router.post('/', async (req, res) => {
 router.post('/export', async (req, res) => {
   try {
     const { file, path, type, ligne } = req.body;
-    if (!file || !Array.isArray(path) || path.length === 0) {
-      return res.status(400).json({ error: 'file (string) and path (array) are required' });
+    if (!file || !path) {
+      return res.status(400).json({ error: 'file (string) and path (string) are required' });
     }
     const dbInput = {
       file,
@@ -85,8 +85,8 @@ router.post('/export', async (req, res) => {
       created_at: new Date().toISOString()
     };
     const { data, error } = await supabase.from('export').insert(dbInput).select('*').single();
-    if (error) return res.status(400).json({ error: error.message });
-    res.status(201).json(data);
+  if (error) return res.status(400).json({ error: error.message });
+  res.status(201).json(data);
   } catch (err) {
     console.error('Erreur lors de l\'insertion dans export:', err);
     res.status(500).json({ error: 'Erreur lors de l\'insertion dans export' });
