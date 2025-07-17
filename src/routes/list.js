@@ -146,6 +146,35 @@ router.post('/', upload.single('file'), async (req, res) => {
   }
 });
 
+// POST import lists (insertion directe dans la table 'liste')
+router.post('/import', async (req, res) => {
+  try {
+    let lists = req.body.lists;
+    if (!Array.isArray(lists)) {
+      lists = [req.body];
+    }
+    for (const l of lists) {
+      if (!l.type || !l.nom || typeof l.elements !== 'number' || !l.path) {
+        return res.status(400).json({ error: 'Chaque liste doit avoir type, nom, elements (number) et path' });
+      }
+    }
+    const dbInputs = lists.map(l => ({
+      type: l.type,
+      nom: l.nom,
+      elements: l.elements,
+      path: l.path,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }));
+    const { data, error } = await supabase.from('liste').insert(dbInputs).select('*');
+    if (error) return res.status(400).json({ error: error.message });
+    res.status(201).json(data);
+  } catch (err) {
+    console.error('Erreur lors de l\'importation de listes:', err);
+    res.status(500).json({ error: 'Erreur lors de l\'importation de listes' });
+  }
+});
+
 // PUT update list
 router.put('/:id', async (req, res) => {
   try {
