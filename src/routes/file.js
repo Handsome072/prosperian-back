@@ -73,20 +73,28 @@ router.post('/', async (req, res) => {
 // POST create export record
 router.post('/export', async (req, res) => {
   try {
-    const { file, path, type, ligne } = req.body;
-    if (!file || !path) {
-      return res.status(400).json({ error: 'file (string) and path (string) are required' });
+    let exports = req.body.exports;
+    if (!Array.isArray(exports)) {
+      // Pour compatibilité ascendante, accepte aussi l'ancien format
+      exports = [req.body];
     }
-    const dbInput = {
-      file,
-      path,
-      type: type || null,
-      ligne: typeof ligne === 'number' ? ligne : null,
+    // Validation minimale
+    for (const exp of exports) {
+      if (!exp.file || !exp.path) {
+        return res.status(400).json({ error: 'Chaque export doit avoir file et path' });
+      }
+    }
+    // Ajoute created_at si absent
+    const dbInputs = exports.map(exp => ({
+      file: exp.file,
+      path: exp.path,
+      type: exp.type || null,
+      ligne: typeof exp.ligne === 'number' ? exp.ligne : null,
       created_at: new Date().toISOString()
-    };
-    const { data, error } = await supabase.from('export').insert(dbInput).select('*').single();
-  if (error) return res.status(400).json({ error: error.message });
-  res.status(201).json(data);
+    }));
+    const { data, error } = await supabase.from('export').insert(dbInputs).select('*');
+    if (error) return res.status(400).json({ error: error.message });
+    res.status(201).json(data);
   } catch (err) {
     console.error('Erreur lors de l\'insertion dans export:', err);
     res.status(500).json({ error: 'Erreur lors de l\'insertion dans export' });

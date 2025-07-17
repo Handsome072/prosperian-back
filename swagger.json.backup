@@ -199,6 +199,322 @@
       "get": { "summary": "Get all BODACC notices", "tags": ["BodaccNotice"], "responses": { "200": { "description": "List of BODACC notices", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/BodaccNotice" } } } } } } },
       "post": { "summary": "Create a new BODACC notice", "tags": ["BodaccNotice"], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BodaccNoticeInput" } } } }, "responses": { "201": { "description": "BODACC notice created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BodaccNotice" } } } }, "400": { "description": "Invalid input" } } }
     },
+    "/api/list": {
+      "get": { 
+        "summary": "Get all lists", 
+        "tags": ["List"], 
+        "responses": { 
+          "200": { 
+            "description": "List of lists", 
+            "content": { 
+              "application/json": { 
+                "schema": { 
+                  "type": "array", 
+                  "items": { "$ref": "#/components/schemas/List" } 
+                } 
+              } 
+            } 
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        } 
+      },
+      "post": { 
+        "summary": "Create a new list with file upload", 
+        "tags": ["List"], 
+        "requestBody": { 
+          "required": true, 
+          "content": { 
+            "multipart/form-data": { 
+              "schema": { 
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "description": "Type of list (Entreprise or Contact)",
+                    "example": "Entreprise"
+                  },
+                  "nom": {
+                    "type": "string",
+                    "description": "Name of the list",
+                    "example": "Ma liste d'entreprises"
+                  },
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "CSV file to upload"
+                  }
+                },
+                "required": ["type", "nom", "file"]
+              }
+            } 
+          } 
+        }, 
+        "responses": { 
+          "201": { 
+            "description": "List created successfully", 
+            "content": { 
+              "application/json": { 
+                "schema": { "$ref": "#/components/schemas/List" } 
+              } 
+            } 
+          }, 
+          "400": { 
+            "description": "Invalid input or file format", 
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        } 
+      }
+    },
+    "/api/list/{id}": {
+      "get": { 
+        "summary": "Get a list by ID", 
+        "tags": ["List"], 
+        "parameters": [ 
+          { 
+            "name": "id", 
+            "in": "path", 
+            "required": true, 
+            "schema": { "type": "string", "format": "uuid" } 
+          } 
+        ], 
+        "responses": { 
+          "200": { 
+            "description": "List found", 
+            "content": { 
+              "application/json": { 
+                "schema": { "$ref": "#/components/schemas/List" } 
+              } 
+            } 
+          }, 
+          "404": { 
+            "description": "List not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        } 
+      },
+      "put": { 
+        "summary": "Update a list by ID", 
+        "tags": ["List"], 
+        "parameters": [ 
+          { 
+            "name": "id", 
+            "in": "path", 
+            "required": true, 
+            "schema": { "type": "string", "format": "uuid" } 
+          } 
+        ], 
+        "requestBody": { 
+          "required": true, 
+          "content": { 
+            "application/json": { 
+              "schema": { "$ref": "#/components/schemas/ListInput" } 
+            } 
+          } 
+        }, 
+        "responses": { 
+          "200": { 
+            "description": "List updated", 
+            "content": { 
+              "application/json": { 
+                "schema": { "$ref": "#/components/schemas/List" } 
+              } 
+            } 
+          }, 
+          "400": { 
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }, 
+          "404": { 
+            "description": "List not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        } 
+      },
+      "delete": { 
+        "summary": "Delete a list by ID", 
+        "tags": ["List"], 
+        "parameters": [ 
+          { 
+            "name": "id", 
+            "in": "path", 
+            "required": true, 
+            "schema": { "type": "string", "format": "uuid" } 
+          } 
+        ], 
+        "responses": { 
+          "204": { 
+            "description": "List deleted" 
+          }, 
+          "404": { 
+            "description": "List not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        } 
+      }
+    },
+    "/api/list/{id}/download": {
+      "get": { 
+        "summary": "Download list file", 
+        "tags": ["List"], 
+        "parameters": [ 
+          { 
+            "name": "id", 
+            "in": "path", 
+            "required": true, 
+            "schema": { "type": "string", "format": "uuid" } 
+          } 
+        ], 
+        "responses": { 
+          "200": { 
+            "description": "File downloaded successfully",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }, 
+          "404": { 
+            "description": "List or file not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        } 
+      }
+    }
+    },
     "/api/bodacc_notices/{id}": {
       "get": { "summary": "Get a BODACC notice by ID", "tags": ["BodaccNotice"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "responses": { "200": { "description": "BODACC notice found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BodaccNotice" } } } }, "404": { "description": "BODACC notice not found" } } },
       "put": { "summary": "Update a BODACC notice by ID", "tags": ["BodaccNotice"], "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BodaccNoticeInput" } } } }, "responses": { "200": { "description": "BODACC notice updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BodaccNotice" } } } }, "400": { "description": "Invalid input" }, "404": { "description": "BODACC notice not found" } } },
@@ -3164,8 +3480,8 @@
         }
       },
       "post": {
-        "summary": "Ajouter un ou plusieurs exports de fichiers",
-        "description": "Ajoute un ou plusieurs enregistrements dans la table 'export'. Le corps doit contenir la clé 'exports' (tableau d'objets à insérer). Pour compatibilité, un seul objet est aussi accepté.",
+        "summary": "Ajouter un export de fichier (nom et chemins)",
+        "description": "Ajoute un enregistrement dans la table 'export' avec le nom du fichier (sans extension) et un tableau de chemins (CSV, XLSX, etc).",
         "tags": ["Export"],
         "requestBody": {
           "required": true,
@@ -3174,48 +3490,27 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "exports": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "file": { "type": "string", "description": "Nom du fichier exporté (avec extension)" },
-                        "path": { "type": "string", "description": "Chemin du fichier exporté" },
-                        "type": { "type": "string", "description": "Type d'export (ex: entreprise, contact)" },
-                        "ligne": { "type": "integer", "description": "Nombre de lignes exportées" }
-                      },
-                      "required": ["file", "path"]
-                    },
-                    "description": "Tableau d'exports à insérer"
-                  }
+                  "file": { "type": "string", "description": "Nom du fichier exporté (sans extension)" },
+                  "path": { "type": "array", "items": { "type": "string" }, "description": "Tableau des chemins des fichiers exportés (CSV, XLSX, etc)" }
                 },
-                "example": {
-                  "exports": [
-                    { "type": "entreprise", "file": "rapport.csv", "path": "/public/file/rapport.csv", "ligne": 150 },
-                    { "type": "entreprise", "file": "rapport.xlsx", "path": "/public/file/rapport.xlsx", "ligne": 150 }
-                  ]
-                }
+                "required": ["file", "path"],
+                "example": { "file": "export", "path": ["/public/file/export.csv", "/public/file/export.xlsx"] }
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Exports enregistrés avec succès",
+            "description": "Export enregistré avec succès",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": { "type": "string", "format": "uuid" },
-                      "file": { "type": "string" },
-                      "path": { "type": "string" },
-                      "type": { "type": "string" },
-                      "ligne": { "type": "integer" },
-                      "created_at": { "type": "string", "format": "date-time" }
-                    }
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "integer" },
+                    "file": { "type": "string" },
+                    "path": { "type": "array", "items": { "type": "string" } },
+                    "created_at": { "type": "string", "format": "date-time" }
                   }
                 }
               }
@@ -3778,6 +4073,29 @@
           "linkedin_url": { "type": "string", "description": "LinkedIn URL" }
         },
         "required": ["uuid", "first_name", "last_name"]
+      },
+      "List": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "description": "Unique identifier (UUID)" },
+          "type": { "type": "string", "description": "Type of list (Entreprise or Contact)", "enum": ["Entreprise", "Contact"] },
+          "nom": { "type": "string", "description": "Name of the list" },
+          "elements": { "type": "integer", "description": "Number of elements in the list" },
+          "path": { "type": "string", "description": "Path to the stored file" },
+          "created_at": { "type": "string", "format": "date-time", "description": "Date and time list was created" },
+          "updated_at": { "type": "string", "format": "date-time", "description": "Date and time list was last updated" }
+        },
+        "required": ["id", "type", "nom", "elements", "path", "created_at", "updated_at"]
+      },
+      "ListInput": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "description": "Type of list (Entreprise or Contact)", "enum": ["Entreprise", "Contact"] },
+          "nom": { "type": "string", "description": "Name of the list" },
+          "elements": { "type": "integer", "description": "Number of elements in the list" },
+          "path": { "type": "string", "description": "Path to the stored file" }
+        },
+        "required": ["type", "nom"]
       }
     }
   },
@@ -3801,6 +4119,10 @@
     {
       "name": "Pronto Workflows",
       "description": "Composite workflows that combine multiple Pronto API calls for complex operations"
+    },
+    {
+      "name": "List",
+      "description": "Operations for managing imported lists of companies or contacts"
     }
   ],
   "x-endpoint-descriptions": [
