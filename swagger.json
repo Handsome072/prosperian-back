@@ -3289,6 +3289,123 @@
           "500": { "description": "Erreur serveur" }
         }
       }
+    },
+    "/api/company/combined": {
+      "get": {
+        "summary": "Recherche combinée Pronto + INSEE avec filtres avancés",
+        "description": "Recherche d'entreprises en combinant les données de Pronto et de l'API INSEE. Permet de filtrer par nom, SIREN, code NAF, région, etc.",
+        "tags": ["Company", "Pronto", "INSEE"],
+        "parameters": [
+          { "name": "name", "in": "query", "description": "Nom de l'entreprise (dénomination)", "required": false, "schema": { "type": "string" } },
+          { "name": "siren", "in": "query", "description": "Numéro SIREN de l'entreprise", "required": false, "schema": { "type": "string" } },
+          { "name": "naf", "in": "query", "description": "Code NAF/APE de l'entreprise", "required": false, "schema": { "type": "string" } },
+          { "name": "region", "in": "query", "description": "Région de l'entreprise (optionnel)", "required": false, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Données combinées Pronto + INSEE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pronto": { "type": "object", "description": "Résultat Pronto (enrichissement ou recherche)" },
+                    "insee": { "type": "array", "description": "Liste d'entreprises INSEE (unités légales)", "items": { "type": "object" } }
+                  },
+                  "example": {
+                    "pronto": { "siren": "552008443", "name": "TOTALENERGIES SE", "naf": "1920Z" },
+                    "insee": [
+                      { "siren": "552008443", "denominationUniteLegale": "TOTALENERGIES SE", "activitePrincipaleUniteLegale": "1920Z", "region": "Île-de-France" }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Paramètres invalides" },
+          "500": { "description": "Erreur serveur ou API externe" }
+        }
+      }
+    },
+    "/insee/unitesLegales": {
+      "get": {
+        "summary": "Recherche d'unités légales (INSEE SIRENE)",
+        "description": "Recherche d'entreprises (unités légales) via l'API SIRENE de l'INSEE. Permet de filtrer par nom, SIREN, code NAF, département, etc.",
+        "tags": ["INSEE", "SIRENE"],
+        "parameters": [
+          { "name": "denominationUniteLegale", "in": "query", "description": "Nom de l'entreprise", "required": false, "schema": { "type": "string" } },
+          { "name": "siren", "in": "query", "description": "Numéro SIREN", "required": false, "schema": { "type": "string" } },
+          { "name": "activitePrincipaleUniteLegale", "in": "query", "description": "Code NAF/APE", "required": false, "schema": { "type": "string" } },
+          { "name": "codeDepartementUniteLegale", "in": "query", "description": "Code département", "required": false, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste d'unités légales (entreprises)",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object" },
+                "example": {
+                  "unitesLegales": [
+                    { "siren": "552008443", "denominationUniteLegale": "TOTALENERGIES SE", "activitePrincipaleUniteLegale": "1920Z", "codeDepartementUniteLegale": "92" }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "description": "Paramètres invalides" },
+          "500": { "description": "Erreur serveur ou API INSEE" }
+        }
+      }
+    },
+    "/insee/siren/{siren}": {
+      "get": {
+        "summary": "Recherche d'une entreprise par SIREN (INSEE SIRENE)",
+        "description": "Recherche une entreprise (unité légale) par son numéro SIREN via l'API SIRENE de l'INSEE.",
+        "tags": ["INSEE", "SIRENE"],
+        "parameters": [
+          { "name": "siren", "in": "path", "description": "Numéro SIREN de l'entreprise", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Données de l'entreprise (unité légale)",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object" },
+                "example": {
+                  "uniteLegale": { "siren": "552008443", "denominationUniteLegale": "TOTALENERGIES SE", "activitePrincipaleUniteLegale": "1920Z" }
+                }
+              }
+            }
+          },
+          "404": { "description": "Entreprise non trouvée" },
+          "500": { "description": "Erreur serveur ou API INSEE" }
+        }
+      }
+    },
+    "/insee/siret/{siret}": {
+      "get": {
+        "summary": "Recherche d'un établissement par SIRET (INSEE SIRENE)",
+        "description": "Recherche un établissement par son numéro SIRET via l'API SIRENE de l'INSEE.",
+        "tags": ["INSEE", "SIRENE"],
+        "parameters": [
+          { "name": "siret", "in": "path", "description": "Numéro SIRET de l'établissement", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Données de l'établissement",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object" },
+                "example": {
+                  "etablissement": { "siret": "55200844300013", "denominationUniteLegale": "TOTALENERGIES SE", "activitePrincipaleEtablissement": "1920Z" }
+                }
+              }
+            }
+          },
+          "404": { "description": "Établissement non trouvé" },
+          "500": { "description": "Erreur serveur ou API INSEE" }
+        }
+      }
     }
   },
   "components": {
@@ -5189,14 +5306,11 @@
       "equivalent": "PUT",
       "example": {
         "request": {
-          "query": "mutation UpdateUser($id: ID!, $input: UserInput!) { updateUser(id: $id, input: $input) { id name email role status } }",
+          "query": "mutation UpdateUser($id: ID!, $input: UserInput!) { updateUser(id: $id, input: $input) { id name email } }",
           "variables": {
             "id": "123e4567-e89b-12d3-a456-426614174012",
             "input": {
-              "name": "John Doe",
-              "email": "john@example.com",
-              "role": "Admin",
-              "status": "Active"
+              "name": "Jane Doe"
             }
           }
         },
@@ -5204,30 +5318,13 @@
           "data": {
             "updateUser": {
               "id": "123e4567-e89b-12d3-a456-426614174012",
-              "name": "John Doe",
-              "email": "john@example.com",
-              "role": "Admin",
-              "status": "Active"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation deleteUser",
-      "description": "Delete a user by ID",
-      "equivalent": "DELETE",
-      "example": {
-        "request": {
-          "query": "mutation DeleteUser($id: ID!) { deleteUser(id: $id) }",
-          "variables": { "id": "123e4567-e89b-12d3-a456-426614174012" }
-        },
-        "response": {
-          "data": {
-            "deleteUser": true
-          }
-        }
-      }
-    }
-  ]
-}
+              "name": "Jane Doe",
+                        "email": "jane@example.com"
+                      }
+                    }
+                  }
+                }
+              }
+            
+    ]
+  }
