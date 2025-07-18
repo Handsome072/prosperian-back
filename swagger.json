@@ -3227,6 +3227,39 @@
       }
     },
     "/api/list/import": {
+      "get": {
+        "summary": "Récupérer toutes les listes (import)",
+        "description": "Retourne toutes les lignes de la table 'liste'. Equivalent à GET /api/list mais sur /import.",
+        "tags": ["Liste"],
+        "responses": {
+          "200": {
+            "description": "Liste des listes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "string", "format": "uuid" },
+                      "type": { "type": "string" },
+                      "nom": { "type": "string" },
+                      "elements": { "type": "integer" },
+                      "path": { "type": "string" },
+                      "created_at": { "type": "string", "format": "date-time" },
+                      "updated_at": { "type": "string", "format": "date-time" }
+                    }
+                  }
+                },
+                "example": [
+                  { "id": "123e4567-e89b-12d3-a456-426614174000", "type": "entreprise", "nom": "ma liste", "elements": 1250, "path": "/public/list/entreprises_madagascar.csv", "created_at": "2024-01-01T10:00:00.000Z", "updated_at": "2024-01-01T10:00:00.000Z" }
+                ]
+              }
+            }
+          },
+          "500": { "description": "Erreur serveur" }
+        }
+      },
       "post": {
         "summary": "Importer une ou plusieurs listes (création directe)",
         "description": "Ajoute une ou plusieurs listes dans la table 'liste'. Le corps doit contenir la clé 'lists' (tableau d'objets à insérer). Pour compatibilité, un seul objet est aussi accepté.",

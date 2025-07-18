@@ -60,6 +60,26 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET all lists (import)
+router.get('/import', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('liste')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Erreur lors de la récupération des listes (import):', error);
+      return res.status(500).json({ error: error.message });
+    }
+    
+    res.json(data || []);
+  } catch (err) {
+    console.error('Erreur lors de la récupération des listes (import):', err);
+    res.status(500).json({ error: 'Erreur lors de la récupération des listes (import)' });
+  }
+});
+
 // GET list by id
 router.get('/:id', async (req, res) => {
   try {
