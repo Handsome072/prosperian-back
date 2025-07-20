@@ -3322,6 +3322,73 @@
           "500": { "description": "Erreur serveur" }
         }
       }
+    },
+    "/api/list/{id}/content": {
+      "get": {
+        "summary": "Récupérer le contenu CSV d'une liste",
+        "description": "Retourne le contenu du fichier CSV associé à la liste identifiée par l'id (chaque ligne du CSV devient un objet).",
+        "tags": ["Liste"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "UUID de la liste dont on veut le contenu CSV"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contenu du CSV sous forme de tableau d'objets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "type": "object" }
+                },
+                "example": [
+                  { "col1": "valeur1", "col2": "valeur2" },
+                  { "col1": "valeur3", "col2": "valeur4" }
+                ]
+              }
+            }
+          },
+          "404": { "description": "Liste ou fichier CSV non trouvé" },
+          "500": { "description": "Erreur serveur ou parsing CSV" }
+        }
+      }
+    },
+    "/api/list/{id}/first-column": {
+      "get": {
+        "summary": "Récupérer la première colonne du CSV d'une liste",
+        "description": "Retourne uniquement la première colonne du fichier CSV associé à la liste identifiée par l'id (tableau de valeurs).",
+        "tags": ["Liste"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "UUID de la liste dont on veut la première colonne du CSV"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tableau des valeurs de la première colonne du CSV",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "example": ["Urban Practices", "SOFTAIR", "Ferest Energies BET"]
+              }
+            }
+          },
+          "404": { "description": "Liste ou fichier CSV non trouvé" },
+          "500": { "description": "Erreur serveur ou parsing CSV" }
+        }
+      }
     }
   },
   "components": {
