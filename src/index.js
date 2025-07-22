@@ -50,6 +50,12 @@ app.use('/api/subscription', require('./routes/subscription'));
 app.use('/api/user', require('./routes/user'));
 app.use('/api/web_info', require('./routes/web_info'));
 app.use('/api/list', require('./routes/list'));
+app.use('/api/siren', require('./routes/siren'));
+app.use('/api/siret', require('./routes/siret'));
+app.use('/api/workflow', require('./routes/workflow'));
+app.use('/api/prosperian', require('./routes/workflow'));
+app.use('/siren-data', require('./routes/sirenData'));
+app.use('/api/search', require('./routes/search'));
 
 app.use('/api/pronto', require('./routes/pronto'));
 app.use('/api/pronto-workflows', require('./routes/pronto-workflows'));
