@@ -1803,6 +1803,13 @@
             "required": false,
             "schema": { "type": "integer", "default": 20, "minimum": 1, "maximum": 50 },
             "description": "Maximum number of searches to process (for performance)"
+          },
+          {
+            "name": "activitePrincipaleEtablissement",
+            "in": "query",
+            "description": "Filtre optionnel : ne retourne que les entreprises dont le champ activitePrincipaleEtablissement (issu du SIRET) correspond à cette valeur.",
+            "required": false,
+            "schema": { "type": "string" }
           }
         ], 
         "responses": { 
@@ -3322,6 +3329,453 @@
           "500": { "description": "Erreur serveur" }
         }
       }
+    },
+    "/api/list/{id}/content": {
+      "get": {
+        "summary": "Récupérer le contenu CSV d'une liste",
+        "description": "Retourne le contenu du fichier CSV associé à la liste identifiée par l'id (chaque ligne du CSV devient un objet).",
+        "tags": ["Liste"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "UUID de la liste dont on veut le contenu CSV"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contenu du CSV sous forme de tableau d'objets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "type": "object" }
+                },
+                "example": [
+                  { "col1": "valeur1", "col2": "valeur2" },
+                  { "col1": "valeur3", "col2": "valeur4" }
+                ]
+              }
+            }
+          },
+          "404": { "description": "Liste ou fichier CSV non trouvé" },
+          "500": { "description": "Erreur serveur ou parsing CSV" }
+        }
+      }
+    },
+    "/api/list/{id}/first-column": {
+      "get": {
+        "summary": "Récupérer la première colonne du CSV d'une liste",
+        "description": "Retourne uniquement la première colonne du fichier CSV associé à la liste identifiée par l'id (tableau de valeurs).",
+        "tags": ["Liste"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "UUID de la liste dont on veut la première colonne du CSV"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tableau des valeurs de la première colonne du CSV",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "example": ["Urban Practices", "SOFTAIR", "Ferest Energies BET"]
+              }
+            }
+          },
+          "404": { "description": "Liste ou fichier CSV non trouvé" },
+          "500": { "description": "Erreur serveur ou parsing CSV" }
+        }
+      }
+    },
+    "/api/siret": {
+      "get": {
+        "summary": "Recherche d'établissement par denominationUniteLegale (INSEE Sirene)",
+        "description": "Recherche un établissement via l'API INSEE Sirene en filtrant sur la dénomination légale (denominationUniteLegale). Retourne un seul résultat.",
+        "tags": ["INSEE", "Sirene"],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Valeur de la dénomination légale à rechercher (denominationUniteLegale)",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Résultat de la recherche Sirene (1 établissement)",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object" },
+                "example": {
+                  "header": { "total": 1 },
+                  "etablissements": [
+                    {
+                      "siret": "12345678901234",
+                      "uniteLegale": {
+                        "denominationUniteLegale": "NOM ENTREPRISE",
+                        "categorieJuridiqueUniteLegale": "5498",
+                        "activitePrincipaleUniteLegale": "6201Z"
+                      },
+                      "adresseEtablissement": {
+                        "numeroVoieEtablissement": "10",
+                        "typeVoieEtablissement": "RUE",
+                        "libelleVoieEtablissement": "DE LA PAIX"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "description": "Paramètre q manquant ou invalide" },
+          "500": { "description": "Erreur serveur ou INSEE" }
+        }
+      }
+    },
+    "/api/workflow/searches": {
+      "get": {
+        "summary": "Liste des recherches ProntoHQ (workflow)",
+        "description": "Récupère la liste des recherches depuis l'API ProntoHQ (https://app.prontohq.com/api/v2/searches) avec authentification X-API-KEY.",
+        "tags": ["Workflow", "ProntoHQ"],
+        "parameters": [
+          {
+            "name": "X-API-KEY",
+            "in": "header",
+            "description": "Clé API ProntoHQ à fournir dans le header",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste des recherches ProntoHQ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "searches": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string", "format": "uuid" },
+                          "name": { "type": "string" },
+                          "created_at": { "type": "string", "format": "date-time" }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "searches": [
+                    {
+                      "id": "3c90c3cc-0d44-4b50-8888-8dd25736052a",
+                      "name": "<string>",
+                      "created_at": "2023-11-07T05:31:56Z"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": { "description": "Clé API manquante ou invalide" },
+          "500": { "description": "Erreur serveur ou ProntoHQ" }
+        }
+      }
+    },
+    "/api/prosperian/get/global/result": {
+      "get": {
+        "summary": "Résultats globaux des recherches ProntoHQ (workflow)",
+        "description": "Récupère la liste des recherches depuis l'API ProntoHQ (https://app.prontohq.com/api/v2/searches). L'API key est gérée côté serveur.",
+        "tags": ["Workflow", "ProntoHQ"],
+        "responses": {
+          "200": {
+            "description": "Liste des recherches ProntoHQ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "searches": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string", "format": "uuid" },
+                          "name": { "type": "string", "format": "date-time" }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "searches": [
+                    {
+                      "id": "3c90c3cc-0d44-4b50-8888-8dd25736052a",
+                      "name": "<string>",
+                      "created_at": "2023-11-07T05:31:56Z"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": { "description": "Erreur serveur ou ProntoHQ" }
+        }
+      }
+    },
+    "/api/prosperian/get/global/result": {
+      "get": {
+        "summary": "Résultats globaux détaillés des recherches ProntoHQ (workflow)",
+        "description": "Récupère la liste des recherches depuis l'API ProntoHQ, puis pour chaque id, récupère le détail de la recherche. Retourne un tableau 'results' avec le détail de chaque recherche (ou une erreur par id). L'API key est gérée côté serveur.",
+        "tags": ["Workflow", "ProntoHQ"],
+        "responses": {
+          "200": {
+            "description": "Détails de toutes les recherches ProntoHQ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string", "format": "uuid" },
+                          "name": { "type": "string", "format": "date-time" },
+                          "other_detail": { "type": "string" },
+                          "error": { "type": "string" }
+                        },
+                        "required": ["id"]
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "results": [
+                    {
+                      "id": "3c90c3cc-0d44-4b50-8888-8dd25736052a",
+                      "name": "Recherche A",
+                      "created_at": "2023-11-07T05:31:56Z",
+                      "other_detail": "..."
+                    },
+                    {
+                      "id": "b2d2c3cc-0d44-4b50-8888-8dd25736052b",
+                      "error": "Not found"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": { "description": "Erreur serveur ou ProntoHQ" }
+        }
+      }
+    },
+    "/api/prosperian/get/global/result": {
+      "get": {
+        "summary": "Résultats globaux paginés des entreprises ProntoHQ (workflow)",
+        "description": "Récupère la liste paginée des entreprises (leads) issues de toutes les recherches ProntoHQ (jusqu'à 10 recherches). L'utilisateur peut choisir la page à afficher via le paramètre 'page' ou 'paginate'. Si les deux sont fournis, 'paginate' est prioritaire. 12 entreprises par page. Si aucun n'est fourni, tous les résultats sont retournés.",
+        "tags": ["Workflow", "ProntoHQ"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Numéro de la page à afficher (optionnel, par défaut tous les résultats si non fourni). Ignoré si 'paginate' est présent.",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1 }
+          },
+          {
+            "name": "paginate",
+            "in": "query",
+            "description": "Numéro de la page à afficher (optionnel, prioritaire sur 'page' si les deux sont fournis). 12 entreprises par page.",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Nombre de résultats à afficher par page (optionnel, par défaut 12)",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "default": 12 }
+          },
+          {
+            "name": "activitePrincipaleEtablissement",
+            "in": "query",
+            "description": "Filtre optionnel : ne retourne que les entreprises dont le champ activitePrincipaleEtablissement (issu du SIRET) correspond à cette valeur.",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Page paginée des entreprises (leads) fusionnées de toutes les recherches ProntoHQ.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "page": { "type": ["integer", "null"] },
+                    "pageSize": { "type": "integer" },
+                    "total": { "type": "integer" },
+                    "totalPages": { "type": "integer" },
+                    "results": {
+                      "type": "array",
+                      "items": { "type": "object" }
+                    }
+                  }
+                },
+                "examples": {
+                  "exemple": {
+                    "value": {
+                      "page": 2,
+                      "pageSize": 12,
+                      "total": 37,
+                      "totalPages": 4,
+                      "results": [
+                        { "id": "lead13", "name": "Entreprise 13", "autreChamp": "..." },
+                        { "id": "lead14", "name": "Entreprise 14", "autreChamp": "..." }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/siren-data/preview": {
+      "get": {
+        "summary": "Aperçu des 12 premières lignes du fichier StockUniteLegale_utf8.csv",
+        "description": "Retourne les 12 premières lignes du fichier CSV avec les noms de colonnes.",
+        "tags": ["SirenData"],
+        "responses": {
+          "200": {
+            "description": "Aperçu du CSV (12 lignes)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "columns": {
+                      "type": "array",
+                      "items": { "type": "string" },
+                      "description": "Noms des colonnes du CSV"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": { "type": "object" },
+                      "description": "Les 12 premières lignes du CSV"
+                    }
+                  },
+                  "example": {
+                    "columns": ["col1", "col2", "col3"],
+                    "rows": [
+                      { "col1": "val1", "col2": "val2", "col3": "val3" },
+                      { "col1": "val4", "col2": "val5", "col3": "val6" }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur lors de la lecture du CSV"
+          }
+        }
+      }
+    },
+    "/api/search": {
+      "get": {
+        "summary": "Recherche d'entreprises avancée (proxy API publique)",
+        "description": "Proxy vers https://recherche-entreprises.api.gouv.fr/search avec tous les paramètres supportés par l'API publique. Retourne la réponse brute de l'API publique.",
+        "tags": ["Entreprise"],
+        "parameters": [
+          { "in": "query", "name": "q", "schema": { "type": "string" }, "required": false, "description": "Recherche plein texte (ex: q=test)" },
+          { "in": "query", "name": "activite_principale", "schema": { "type": "string" }, "required": false, "description": "Le code NAF ou code APE, un code d'activité suivant la nomenclature de l'INSEE. Valeur unique ou liste séparée par des virgules." },
+          { "in": "query", "name": "categorie_entreprise", "schema": { "type": "string", "enum": ["PME", "ETI", "GE"] }, "required": false, "description": "Catégorie d'entreprise de l'unité légale. Valeur unique ou liste séparée par des virgules." },
+          { "in": "query", "name": "code_collectivite_territoriale", "schema": { "type": "string" }, "required": false, "description": "Code affilié à une collectivité territoriale." },
+          { "in": "query", "name": "convention_collective_renseignee", "schema": { "type": "boolean" }, "required": false, "description": "Entreprises ayant au moins un établissement dont la convention collective est renseignée." },
+          { "in": "query", "name": "code_postal", "schema": { "type": "string" }, "required": false, "description": "Code postal en 5 chiffres. Valeur unique ou liste séparée par des virgules." },
+          { "in": "query", "name": "code_commune", "schema": { "type": "string" }, "required": false, "description": "Code commune (INSEE) en 5 caractères. Valeur unique ou liste séparée par des virgules." },
+          { "in": "query", "name": "departement", "schema": { "type": "string" }, "required": false, "description": "Code de département. Valeur unique ou liste séparée par des virgules." },
+          { "in": "query", "name": "region", "schema": { "type": "string" }, "required": false, "description": "Code de région. Valeur unique ou liste séparée par des virgules." },
+          { "in": "query", "name": "epci", "schema": { "type": "string" }, "required": false, "description": "Liste des epci valides. Valeur unique ou liste séparée par des virgules." },
+          { "in": "query", "name": "egapro_renseignee", "schema": { "type": "boolean" }, "required": false, "description": "Uniquement les entreprises ayant un index égapro renseigné" },
+          { "in": "query", "name": "est_achats_responsables", "schema": { "type": "boolean" }, "required": false, "description": "Uniquement les entreprises ayant le label RFAR." },
+          { "in": "query", "name": "est_alim_confiance", "schema": { "type": "boolean" }, "required": false, "description": "Uniquement les entreprises ayant au moins un établissement avec un résultat de contrôle sanitaire Alim'Confiance." },
+          { "in": "query", "name": "est_association", "schema": { "type": "boolean" }, "required": false, "description": "Uniquement les entreprises ayant un identifiant d'association ou une nature juridique avec mention 'association'." },
+          { "in": "query", "name": "est_bio", "schema": { "type": "boolean" }, "required": false, "description": "Uniquement les entreprises ayant un établissement certifié par l'agence bio" },
+          { "in": "query", "name": "est_collectivite_territoriale", "schema": { "type": "boolean" }, "required": false, "description": "Uniquement les collectivités territoriales." },
+          { "in": "query", "name": "est_entrepreneur_individuel", "schema": { "type": "boolean" }, "required": false, "description": "Uniquement les entreprises individuelles." },
+          { "in": "query", "name": "est_entrepreneur_spectacle", "schema": { "type": "boolean" }, "required": false, "description": "Uniquement les entreprises ayant une licence d'entrepreneur du spectacle." },
+          { "in": "query", "name": "est_ess", "schema": { "type": "boolean" }, "required": false, "description": "Uniquement les entreprises appartenant au champ de l'économie sociale et solidaire." },
+          { "in": "query", "name": "est_finess", "schema": { "type": "boolean" }, "required": false, "description": "Uniquement les entreprises ayant un établissement du domaine du sanitaire et social (FINESS)" },
+          { "in": "query", "name": "est_organisme_formation", "schema": { "type": "boolean" }, "required": false, "description": "Uniquement les entreprises ayant un établissement organisme de formation" },
+          { "in": "query", "name": "est_patrimoine_vivant", "schema": { "type": "boolean" }, "required": false, "description": "Uniquement les entreprises ayant le label Entreprise du Patrimoine Vivant (EPV)" },
+          { "in": "query", "name": "est_qualiopi", "schema": { "type": "boolean" }, "required": false, "description": "Uniquement les entreprises ayant une certification de la marque 'Qualiopi'" },
+          { "in": "query", "name": "est_rge", "schema": { "type": "boolean" }, "required": false, "description": "Uniquement les entreprises reconnues garantes de l'Environnement (RGE)." },
+          { "in": "query", "name": "est_siae", "schema": { "type": "boolean" }, "required": false, "description": "Uniquement les structures d'insertion par l'activité économique (SIAE)." },
+          { "in": "query", "name": "est_service_public", "schema": { "type": "boolean" }, "required": false, "description": "Uniquement les structures reconnues comme administration." },
+          { "in": "query", "name": "est_l100_3", "schema": { "type": "boolean" }, "required": false, "description": "Uniquement les administrations au sens de l'article L. 100-3 du code des relations entre le public et l'administration (CRPA)" },
+          { "in": "query", "name": "est_societe_mission", "schema": { "type": "boolean" }, "required": false, "description": "Uniquement les sociétés à mission." },
+          { "in": "query", "name": "est_uai", "schema": { "type": "boolean" }, "required": false, "description": "Uniquement les entreprises ayant un établissement UAI." },
+          { "in": "query", "name": "etat_administratif", "schema": { "type": "string", "enum": ["A", "C"] }, "required": false, "description": "État administratif de l'unité légale. 'A' pour Active, 'C' pour Cessée." },
+          { "in": "query", "name": "id_convention_collective", "schema": { "type": "string" }, "required": false, "description": "Identifiant de Convention Collective d'un établissement d'une entreprise." },
+          { "in": "query", "name": "id_finess", "schema": { "type": "string" }, "required": false, "description": "Identifiant FINESS d'un établissement d'une entreprise." },
+          { "in": "query", "name": "id_rge", "schema": { "type": "string" }, "required": false, "description": "Identifiant RGE d'un établissement d'une entreprise." },
+          { "in": "query", "name": "id_uai", "schema": { "type": "string" }, "required": false, "description": "Identifiant UAI d'un établissement d'une entreprise." },
+          { "in": "query", "name": "nature_juridique", "schema": { "type": "string" }, "required": false, "description": "Catégorie juridique de l'unité légale. Valeur unique ou liste séparée par des virgules." },
+          { "in": "query", "name": "section_activite_principale", "schema": { "type": "string" }, "required": false, "description": "Section de l'activité principale. Valeur unique ou liste séparée par des virgules." },
+          { "in": "query", "name": "tranche_effectif_salarie", "schema": { "type": "string" }, "required": false, "description": "Tranche d'effectif salarié de l'entreprise. Valeur unique ou liste séparée par des virgules." },
+          { "in": "query", "name": "nom_personne", "schema": { "type": "string" }, "required": false, "description": "Nom d'une personne partie prenante de l'entreprise (dirigeant ou élu)." },
+          { "in": "query", "name": "prenoms_personne", "schema": { "type": "string" }, "required": false, "description": "Prénom(s) d'une personne partie prenante de l'entreprise (dirigeant ou élu)." },
+          { "in": "query", "name": "date_naissance_personne_min", "schema": { "type": "string", "format": "date" }, "required": false, "description": "Valeur minimale de la date de naissance d'une personne partie prenante de l'entreprise." },
+          { "in": "query", "name": "date_naissance_personne_max", "schema": { "type": "string", "format": "date" }, "required": false, "description": "Valeur maximale de la date de naissance d'une personne partie prenante de l'entreprise." },
+          { "in": "query", "name": "type_personne", "schema": { "type": "string", "enum": ["dirigeant", "elu"] }, "required": false, "description": "Type de la partie prenante de l'entreprise, dirigeant ou élu." },
+          { "in": "query", "name": "ca_min", "schema": { "type": "integer" }, "required": false, "description": "Valeur minimale du chiffre d'affaire de l'entreprise" },
+          { "in": "query", "name": "ca_max", "schema": { "type": "integer" }, "required": false, "description": "Valeur maximale du chiffre d'affaire de l'entreprise" },
+          { "in": "query", "name": "resultat_net_min", "schema": { "type": "integer" }, "required": false, "description": "Valeur minimale du résultat net de l'entreprise" },
+          { "in": "query", "name": "resultat_net_max", "schema": { "type": "integer" }, "required": false, "description": "Valeur maximale du résultat net de l'entreprise" },
+          { "in": "query", "name": "limite_matching_etablissements", "schema": { "type": "integer" }, "required": false, "default": 10, "description": "Nombre d'établissements connexes inclus dans la réponse (matching_etablissements). Valeur entre 1 et 100." },
+          { "in": "query", "name": "minimal", "schema": { "type": "boolean" }, "required": false, "description": "Permet de retourner une réponse minimale, qui exclut les champs secondaires." },
+          { "in": "query", "name": "include", "schema": { "type": "string" }, "required": false, "description": "ATTENTION : Ce paramètre ne peut être appelé qu'avec le champ 'minimal=True'. Permet de ne demander que certains des champs secondaires." },
+          { "in": "query", "name": "page", "schema": { "type": "integer" }, "required": false, "default": 1, "description": "Le numéro de la page à retourner." },
+          { "in": "query", "name": "per_page", "schema": { "type": "integer" }, "required": false, "default": 10, "description": "Le nombre de résultats par page, limité à 25." }
+        ],
+        "responses": {
+          "200": {
+            "description": "Résultat de la recherche d'entreprises",
+            "content": {
+              "application/json": {
+                "example": {
+                  "results": [],
+                  "total_results": 0,
+                  "page": 0,
+                  "per_page": 0,
+                  "total_pages": 0
+                }
+              }
+            }
+          },
+          "400": { "description": "Paramètre manquant ou invalide" },
+          "500": { "description": "Erreur serveur ou erreur de l'API publique" }
+        }
+      }
     }
   },
   "components": {
@@ -4149,1115 +4603,6 @@
                 "sales": 1000000
               }
             ]
-          }
-        }
-      }
-    },
-    {
-      "operation": "query riskAssessment",
-      "description": "Retrieve a single risk assessment by ID",
-      "equivalent": "GET",
-      "example": {
-        "request": {
-          "query": "query GetRiskAssessment($id: ID!) { riskAssessment(id: $id) { id risk_level } }",
-          "variables": { "id": "123e4567-e89b-12d3-a456-426614174006" }
-        },
-        "response": {
-          "data": {
-            "riskAssessment": {
-              "id": "123e4567-e89b-12d3-a456-426614174006",
-              "risk_level": 2
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "query riskAssessments",
-      "description": "Retrieve all risk assessments",
-      "equivalent": "GET",
-      "example": {
-        "request": {
-          "query": "query { riskAssessments { id risk_level } }"
-        },
-        "response": {
-          "data": {
-            "riskAssessments": [
-              {
-                "id": "123e4567-e89b-12d3-a456-426614174006",
-                "risk_level": 2
-              }
-            ]
-          }
-        }
-      }
-    },
-    {
-      "operation": "query bodaccNotice",
-      "description": "Retrieve a single BODACC notice by ID",
-      "equivalent": "GET",
-      "example": {
-        "request": {
-          "query": "query GetBodaccNotice($id: ID!) { bodaccNotice(id: $id) { id type parution_date } }",
-          "variables": { "id": "123e4567-e89b-12d3-a456-426614174007" }
-        },
-        "response": {
-          "data": {
-            "bodaccNotice": {
-              "id": "123e4567-e89b-12d3-a456-426614174007",
-              "type": "Announcement",
-              "parution_date": "2023-01-01"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "query bodaccNotices",
-      "description": "Retrieve all BODACC notices",
-      "equivalent": "GET",
-      "example": {
-        "request": {
-          "query": "query { bodaccNotices { id type parution_date } }"
-        },
-        "response": {
-          "data": {
-            "bodaccNotices": [
-              {
-                "id": "123e4567-e89b-12d3-a456-426614174007",
-                "type": "Announcement",
-                "parution_date": "2023-01-01"
-              }
-            ]
-          }
-        }
-      }
-    },
-    {
-      "operation": "query legalAct",
-      "description": "Retrieve a single legal act by ID",
-      "equivalent": "GET",
-      "example": {
-        "request": {
-          "query": "query GetLegalAct($id: ID!) { legalAct(id: $id) { id type date } }",
-          "variables": { "id": "123e4567-e89b-12d3-a456-426614174008" }
-        },
-        "response": {
-          "data": {
-            "legalAct": {
-              "id": "123e4567-e89b-12d3-a456-426614174008",
-              "type": "Merger",
-              "date": "2023-01-01"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "query legalActs",
-      "description": "Retrieve all legal acts",
-      "equivalent": "GET",
-      "example": {
-        "request": {
-          "query": "query { legalActs { id type date } }"
-        },
-        "response": {
-          "data": {
-            "legalActs": [
-              {
-                "id": "123e4567-e89b-12d3-a456-426614174008",
-                "type": "Merger",
-                "date": "2023-01-01"
-              }
-            ]
-          }
-        }
-      }
-    },
-    {
-      "operation": "query webInfo",
-      "description": "Retrieve a single web info by ID",
-      "equivalent": "GET",
-      "example": {
-        "request": {
-          "query": "query GetWebInfo($id: ID!) { webInfo(id: $id) { id linkedin_url } }",
-          "variables": { "id": "123e4567-e89b-12d3-a456-426614174009" }
-        },
-        "response": {
-          "data": {
-            "webInfo": {
-              "id": "123e4567-e89b-12d3-a456-426614174009",
-              "linkedin_url": "https://linkedin.com/company/example"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "query webInfos",
-      "description": "Retrieve all web infos",
-      "equivalent": "GET",
-      "example": {
-        "request": {
-          "query": "query { webInfos { id linkedin_url } }"
-        },
-        "response": {
-          "data": {
-            "webInfos": [
-              {
-                "id": "123e4567-e89b-12d3-a456-426614174009",
-                "linkedin_url": "https://linkedin.com/company/example"
-              }
-            ]
-          }
-        }
-      }
-    },
-    {
-      "operation": "query email",
-      "description": "Retrieve a single email by ID",
-      "equivalent": "GET",
-      "example": {
-        "request": {
-          "query": "query GetEmail($id: ID!) { email(id: $id) { id value type } }",
-          "variables": { "id": "123e4567-e89b-12d3-a456-426614174010" }
-        },
-        "response": {
-          "data": {
-            "email": {
-              "id": "123e4567-e89b-12d3-a456-426614174010",
-              "value": "contact@example.com",
-              "type": "generic"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "query emails",
-      "description": "Retrieve all emails",
-      "equivalent": "GET",
-      "example": {
-        "request": {
-          "query": "query { emails { id value type } }"
-        },
-        "response": {
-          "data": {
-            "emails": [
-              {
-                "id": "123e4567-e89b-12d3-a456-426614174010",
-                "value": "contact@example.com",
-                "type": "generic"
-              }
-            ]
-          }
-        }
-      }
-    },
-    {
-      "operation": "query address",
-      "description": "Retrieve a single address by ID",
-      "equivalent": "GET",
-      "example": {
-        "request": {
-          "query": "query GetAddress($id: ID!) { address(id: $id) { id street city } }",
-          "variables": { "id": "123e4567-e89b-12d3-a456-426614174011" }
-        },
-        "response": {
-          "data": {
-            "address": {
-              "id": "123e4567-e89b-12d3-a456-426614174011",
-              "street": "123 Main St",
-              "city": "Paris"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "query addresses",
-      "description": "Retrieve all addresses",
-      "equivalent": "GET",
-      "example": {
-        "request": {
-          "query": "query { addresses { id street city } }"
-        },
-        "response": {
-          "data": {
-            "addresses": [
-              {
-                "id": "123e4567-e89b-12d3-a456-426614174011",
-                "street": "123 Main St",
-                "city": "Paris"
-              }
-            ]
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation createCompany",
-      "description": "Create a new company",
-      "equivalent": "POST",
-      "example": {
-        "request": {
-          "query": "mutation CreateCompany($input: CompanyInput!) { createCompany(input: $input) { id registration_number name } }",
-          "variables": {
-            "input": {
-              "registration_number": "123456789",
-              "full_registration_number": "FR123456789",
-              "name": "Example Corporation"
-            }
-          }
-        },
-        "response": {
-          "data": {
-            "createCompany": {
-              "id": "123e4567-e89b-12d3-a456-426614174000",
-              "registration_number": "123456789",
-              "name": "Example Corporation"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation updateCompany",
-      "description": "Update an existing company",
-      "equivalent": "PUT",
-      "example": {
-        "request": {
-          "query": "mutation UpdateCompany($id: ID!, $input: CompanyInput!) { updateCompany(id: $id, input: $input) { id name } }",
-          "variables": {
-            "id": "123e4567-e89b-12d3-a456-426614174000",
-            "input": {
-              "name": "Updated Corporation"
-            }
-          }
-        },
-        "response": {
-          "data": {
-            "updateCompany": {
-              "id": "123e4567-e89b-12d3-a456-426614174000",
-              "name": "Updated Corporation"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation deleteCompany",
-      "description": "Delete a company by ID",
-      "equivalent": "DELETE",
-      "example": {
-        "request": {
-          "query": "mutation DeleteCompany($id: ID!) { deleteCompany(id: $id) }",
-          "variables": { "id": "123e4567-e89b-12d3-a456-426614174000" }
-        },
-        "response": {
-          "data": {
-            "deleteCompany": true
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation createEstablishment",
-      "description": "Create a new establishment",
-      "equivalent": "POST",
-      "example": {
-        "request": {
-          "query": "mutation CreateEstablishment($input: EstablishmentInput!) { createEstablishment(input: $input) { id siret company_id } }",
-          "variables": {
-            "input": {
-              "siret": "987654321",
-              "is_head_office": true,
-              "company_id": "123e4567-e89b-12d3-a456-426614174000"
-            }
-          }
-        },
-        "response": {
-          "data": {
-            "createEstablishment": {
-              "id": "123e4567-e89b-12d3-a456-426614174001",
-              "siret": "987654321",
-              "company_id": "123e4567-e89b-12d3-a456-426614174000"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation updateEstablishment",
-      "description": "Update an existing establishment",
-      "equivalent": "PUT",
-      "example": {
-        "request": {
-          "query": "mutation UpdateEstablishment($id: ID!, $input: EstablishmentInput!) { updateEstablishment(id: $id, input: $input) { id siret } }",
-          "variables": {
-            "id": "123e4567-e89b-12d3-a456-426614174001",
-            "input": {
-              "siret": "987654322"
-            }
-          }
-        },
-        "response": {
-          "data": {
-            "updateEstablishment": {
-              "id": "123e4567-e89b-12d3-a456-426614174001",
-              "siret": "987654322"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation deleteEstablishment",
-      "description": "Delete an establishment by ID",
-      "equivalent": "DELETE",
-      "example": {
-        "request": {
-          "query": "mutation DeleteEstablishment($id: ID!) { deleteEstablishment(id: $id) }",
-          "variables": { "id": "123e4567-e89b-12d3-a456-426614174001" }
-        },
-        "response": {
-          "data": {
-            "deleteEstablishment": true
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation createOfficer",
-      "description": "Create a new officer",
-      "equivalent": "POST",
-      "example": {
-        "request": {
-          "query": "mutation CreateOfficer($input: OfficerInput!) { createOfficer(input: $input) { id first_name last_name role } }",
-          "variables": {
-            "input": {
-              "first_name": "John",
-              "last_name": "Doe",
-              "role": "CEO",
-              "company_id": "123e4567-e89b-12d3-a456-426614174000"
-            }
-          }
-        },
-        "response": {
-          "data": {
-            "createOfficer": {
-              "id": "123e4567-e89b-12d3-a456-426614174002",
-              "first_name": "John",
-              "last_name": "Doe",
-              "role": "CEO"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation updateOfficer",
-      "description": "Update an existing officer",
-      "equivalent": "PUT",
-      "example": {
-        "request": {
-          "query": "mutation UpdateOfficer($id: ID!, $input: OfficerInput!) { updateOfficer(id: $id, input: $input) { id role } }",
-          "variables": {
-            "id": "123e4567-e89b-12d3-a456-426614174002",
-            "input": {
-              "role": "CFO"
-            }
-          }
-        },
-        "response": {
-          "data": {
-            "updateOfficer": {
-              "id": "123e4567-e89b-12d3-a456-426614174002",
-              "role": "CFO"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation deleteOfficer",
-      "description": "Delete an officer by ID",
-      "equivalent": "DELETE",
-      "example": {
-        "request": {
-          "query": "mutation DeleteOfficer($id: ID!) { deleteOfficer(id: $id) }",
-          "variables": { "id": "123e4567-e89b-12d3-a456-426614174002" }
-        },
-        "response": {
-          "data": {
-            "deleteOfficer": true
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation createFile",
-      "description": "Create a new file",
-      "equivalent": "POST",
-      "example": {
-        "request": {
-          "query": "mutation CreateFile($input: FileInput!) { createFile(input: $input) { id file_name company_id } }",
-          "variables": {
-            "input": {
-              "file_name": "report.pdf",
-              "status": "uploaded",
-              "company_id": "123e4567-e89b-12d3-a456-426614174000"
-            }
-          }
-        },
-        "response": {
-          "data": {
-            "createFile": {
-              "id": "123e4567-e89b-12d3-a456-426614174004",
-              "file_name": "report.pdf",
-              "company_id": "123e4567-e89b-12d3-a456-426614174000"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation updateFile",
-      "description": "Update an existing file",
-      "equivalent": "PUT",
-      "example": {
-        "request": {
-          "query": "mutation UpdateFile($id: ID!, $input: FileInput!) { updateFile(id: $id, input: $input) { id file_name } }",
-          "variables": {
-            "id": "123e4567-e89b-12d3-a456-426614174004",
-            "input": {
-              "file_name": "updated_report.pdf"
-            }
-          }
-        },
-        "response": {
-          "data": {
-            "updateFile": {
-              "id": "123e4567-e89b-12d3-a456-426614174004",
-              "file_name": "updated_report.pdf"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation deleteFile",
-      "description": "Delete a file by ID",
-      "equivalent": "DELETE",
-      "example": {
-        "request": {
-          "query": "mutation DeleteFile($id: ID!) { deleteFile(id: $id) }",
-          "variables": { "id": "123e4567-e89b-12d3-a456-426614174004" }
-        },
-        "response": {
-          "data": {
-            "deleteFile": true
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation createBeneficialOwner",
-      "description": "Create a new beneficial owner",
-      "equivalent": "POST",
-      "example": {
-        "request": {
-          "query": "mutation CreateBeneficialOwner($input: BeneficialOwnerInput!) { createBeneficialOwner(input: $input) { id first_name last_name } }",
-          "variables": {
-            "input": {
-              "first_name": "Jane",
-              "last_name": "Doe",
-              "birth_date": "1980-01-01",
-              "direct_shares_pct": 25.5,
-              "company_id": "123e4567-e89b-12d3-a456-426614174000"
-            }
-          }
-        },
-        "response": {
-          "data": {
-            "createBeneficialOwner": {
-              "id": "123e4567-e89b-12d3-a456-426614174003",
-              "first_name": "Jane",
-              "last_name": "Doe"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation updateBeneficialOwner",
-      "description": "Update an existing beneficial owner",
-      "equivalent": "PUT",
-      "example": {
-        "request": {
-          "query": "mutation UpdateBeneficialOwner($id: ID!, $input: BeneficialOwnerInput!) { updateBeneficialOwner(id: $id, input: $input) { id first_name } }",
-          "variables": {
-            "id": "123e4567-e89b-12d3-a456-426614174003",
-            "input": {
-              "first_name": "Janet"
-            }
-          }
-        },
-        "response": {
-          "data": {
-            "updateBeneficialOwner": {
-              "id": "123e4567-e89b-12d3-a456-426614174003",
-              "first_name": "Janet"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation deleteBeneficialOwner",
-      "description": "Delete a beneficial owner by ID",
-      "equivalent": "DELETE",
-      "example": {
-        "request": {
-          "query": "mutation DeleteBeneficialOwner($id: ID!) { deleteBeneficialOwner(id: $id) }",
-          "variables": { "id": "123e4567-e89b-12d3-a456-426614174003" }
-        },
-        "response": {
-          "data": {
-            "deleteBeneficialOwner": true
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation createFinancialStatement",
-      "description": "Create a new financial statement",
-      "equivalent": "POST",
-      "example": {
-        "request": {
-          "query": "mutation CreateFinancialStatement($input: FinancialStatementInput!) { createFinancialStatement(input: $input) { id year sales } }",
-          "variables": {
-            "input": {
-              "year": 2023,
-              "sales": 1000000,
-              "company_id": "123e4567-e89b-12d3-a456-426614174000"
-            }
-          }
-        },
-        "response": {
-          "data": {
-            "createFinancialStatement": {
-              "id": "123e4567-e89b-12d3-a456-426614174005",
-              "year": 2023,
-              "sales": 1000000
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation updateFinancialStatement",
-      "description": "Update an existing financial statement",
-      "equivalent": "PUT",
-      "example": {
-        "request": {
-          "query": "mutation UpdateFinancialStatement($id: ID!, $input: FinancialStatementInput!) { updateFinancialStatement(id: $id, input: $input) { id year sales } }",
-          "variables": {
-            "id": "123e4567-e89b-12d3-a456-426614174005",
-            "input": {
-              "sales": 1200000
-            }
-          }
-        },
-        "response": {
-          "data": {
-            "updateFinancialStatement": {
-              "id": "123e4567-e89b-12d3-a456-426614174005",
-              "year": 2023,
-              "sales": 1200000
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation deleteFinancialStatement",
-      "description": "Delete a financial statement by ID",
-      "equivalent": "DELETE",
-      "example": {
-        "request": {
-          "query": "mutation DeleteFinancialStatement($id: ID!) { deleteFinancialStatement(id: $id) }",
-          "variables": { "id": "123e4567-e89b-12d3-a456-426614174005" }
-        },
-        "response": {
-          "data": {
-            "deleteFinancialStatement": true
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation createRiskAssessment",
-      "description": "Create a new risk assessment",
-      "equivalent": "POST",
-      "example": {
-        "request": {
-          "query": "mutation CreateRiskAssessment($input: RiskAssessmentInput!) { createRiskAssessment(input: $input) { id risk_level } }",
-          "variables": {
-            "input": {
-              "risk_level": 2,
-              "company_id": "123e4567-e89b-12d3-a456-426614174000"
-            }
-          }
-        },
-        "response": {
-          "data": {
-            "createRiskAssessment": {
-              "id": "123e4567-e89b-12d3-a456-426614174006",
-              "risk_level": 2
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation updateRiskAssessment",
-      "description": "Update an existing risk assessment",
-      "equivalent": "PUT",
-      "example": {
-        "request": {
-          "query": "mutation UpdateRiskAssessment($id: ID!, $input: RiskAssessmentInput!) { updateRiskAssessment(id: $id, input: $input) { id risk_level } }",
-          "variables": {
-            "id": "123e4567-e89b-12d3-a456-426614174006",
-            "input": {
-              "risk_level": 3
-            }
-          }
-        },
-        "response": {
-          "data": {
-            "updateRiskAssessment": {
-              "id": "123e4567-e89b-12d3-a456-426614174006",
-              "risk_level": 3
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation deleteRiskAssessment",
-      "description": "Delete a risk assessment by ID",
-      "equivalent": "DELETE",
-      "example": {
-        "request": {
-          "query": "mutation DeleteRiskAssessment($id: ID!) { deleteRiskAssessment(id: $id) }",
-          "variables": { "id": "123e4567-e89b-12d3-a456-426614174006" }
-        },
-        "response": {
-          "data": {
-            "deleteRiskAssessment": true
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation createBodaccNotice",
-      "description": "Create a new BODACC notice",
-      "equivalent": "POST",
-      "example": {
-        "request": {
-          "query": "mutation CreateBodaccNotice($input: BodaccNoticeInput!) { createBodaccNotice(input: $input) { id type parution_date } }",
-          "variables": {
-            "input": {
-              "type": "Announcement",
-              "parution_date": "2023-01-01",
-              "company_id": "123e4567-e89b-12d3-a456-426614174000"
-            }
-          }
-        },
-        "response": {
-          "data": {
-            "createBodaccNotice": {
-              "id": "123e4567-e89b-12d3-a456-426614174007",
-              "type": "Announcement",
-              "parution_date": "2023-01-01"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation updateBodaccNotice",
-      "description": "Update an existing BODACC notice",
-      "equivalent": "PUT",
-      "example": {
-        "request": {
-          "query": "mutation UpdateBodaccNotice($id: ID!, $input: BodaccNoticeInput!) { updateBodaccNotice(id: $id, input: $input) { id type } }",
-          "variables": {
-            "id": "123e4567-e89b-12d3-a456-426614174007",
-            "input": {
-              "type": "Updated Announcement"
-            }
-          }
-        },
-        "response": {
-          "data": {
-            "updateBodaccNotice": {
-              "id": "123e4567-e89b-12d3-a456-426614174007",
-              "type": "Updated Announcement"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation deleteBodaccNotice",
-      "description": "Delete a BODACC notice by ID",
-      "equivalent": "DELETE",
-      "example": {
-        "request": {
-          "query": "mutation DeleteBodaccNotice($id: ID!) { deleteBodaccNotice(id: $id) }",
-          "variables": { "id": "123e4567-e89b-12d3-a456-426614174007" }
-        },
-        "response": {
-          "data": {
-            "deleteBodaccNotice": true
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation createLegalAct",
-      "description": "Create a new legal act",
-      "equivalent": "POST",
-      "example": {
-        "request": {
-          "query": "mutation CreateLegalAct($input: LegalActInput!) { createLegalAct(input: $input) { id type date } }",
-          "variables": {
-            "input": {
-              "type": "Merger",
-              "date": "2023-01-01",
-              "company_id": "123e4567-e89b-12d3-a456-426614174000"
-            }
-          }
-        },
-        "response": {
-          "data": {
-            "createLegalAct": {
-              "id": "123e4567-e89b-12d3-a456-426614174008",
-              "type": "Merger",
-              "date": "2023-01-01"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation updateLegalAct",
-      "description": "Update an existing legal act",
-      "equivalent": "PUT",
-      "example": {
-        "request": {
-          "query": "mutation UpdateLegalAct($id: ID!, $input: LegalActInput!) { updateLegalAct(id: $id, input: $input) { id type } }",
-          "variables": {
-            "id": "123e4567-e89b-12d3-a456-426614174008",
-            "input": {
-              "type": "Acquisition"
-            }
-          }
-        },
-        "response": {
-          "data": {
-            "updateLegalAct": {
-              "id": "123e4567-e89b-12d3-a456-426614174008",
-              "type": "Acquisition"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation deleteLegalAct",
-      "description": "Delete a legal act by ID",
-      "equivalent": "DELETE",
-      "example": {
-        "request": {
-          "query": "mutation DeleteLegalAct($id: ID!) { deleteLegalAct(id: $id) }",
-          "variables": { "id": "123e4567-e89b-12d3-a456-426614174008" }
-        },
-        "response": {
-          "data": {
-            "deleteLegalAct": true
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation createWebInfo",
-      "description": "Create a new web info",
-      "equivalent": "POST",
-      "example": {
-        "request": {
-          "query": "mutation CreateWebInfo($input: WebInfoInput!) { createWebInfo(input: $input) { id linkedin_url } }",
-          "variables": {
-            "input": {
-              "linkedin_url": "https://linkedin.com/company/example",
-              "company_id": "123e4567-e89b-12d3-a456-426614174000"
-            }
-          }
-        },
-        "response": {
-          "data": {
-            "createWebInfo": {
-              "id": "123e4567-e89b-12d3-a456-426614174009",
-              "linkedin_url": "https://linkedin.com/company/example"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation updateWebInfo",
-      "description": "Update an existing web info",
-      "equivalent": "PUT",
-      "example": {
-        "request": {
-          "query": "mutation UpdateWebInfo($id: ID!, $input: WebInfoInput!) { updateWebInfo(id: $id, input: $input) { id linkedin_url } }",
-          "variables": {
-            "id": "123e4567-e89b-12d3-a456-426614174009",
-            "input": {
-              "linkedin_url": "https://linkedin.com/company/updated-example"
-            }
-          }
-        },
-        "response": {
-          "data": {
-            "updateWebInfo": {
-              "id": "123e4567-e89b-12d3-a456-426614174009",
-              "linkedin_url": "https://linkedin.com/company/updated-example"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation deleteWebInfo",
-      "description": "Delete a web info by ID",
-      "equivalent": "DELETE",
-      "example": {
-        "request": {
-          "query": "mutation DeleteWebInfo($id: ID!) { deleteWebInfo(id: $id) }",
-          "variables": { "id": "123e4567-e89b-12d3-a456-426614174009" }
-        },
-        "response": {
-          "data": {
-            "deleteWebInfo": true
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation createEmail",
-      "description": "Create a new email",
-      "equivalent": "POST",
-      "example": {
-        "request": {
-          "query": "mutation CreateEmail($input: EmailInput!) { createEmail(input: $input) { id value type } }",
-          "variables": {
-            "input": {
-              "value": "contact@example.com",
-              "type": "generic",
-              "company_id": "123e4567-e89b-12d3-a456-426614174000"
-            }
-          }
-        },
-        "response": {
-          "data": {
-            "createEmail": {
-              "id": "123e4567-e89b-12d3-a456-426614174010",
-              "value": "contact@example.com",
-              "type": "generic"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation updateEmail",
-      "description": "Update an existing email",
-      "equivalent": "PUT",
-      "example": {
-        "request": {
-          "query": "mutation UpdateEmail($id: ID!, $input: EmailInput!) { updateEmail(id: $id, input: $input) { id value } }",
-          "variables": {
-            "id": "123e4567-e89b-12d3-a456-426614174010",
-            "input": {
-              "value": "updated@example.com"
-            }
-          }
-        },
-        "response": {
-          "data": {
-            "updateEmail": {
-              "id": "123e4567-e89b-12d3-a456-426614174010",
-              "value": "updated@example.com"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation deleteEmail",
-      "description": "Delete an email by ID",
-      "equivalent": "DELETE",
-      "example": {
-        "request": {
-          "query": "mutation DeleteEmail($id: ID!) { deleteEmail(id: $id) }",
-          "variables": { "id": "123e4567-e89b-12d3-a456-426614174010" }
-        },
-        "response": {
-          "data": {
-            "deleteEmail": true
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation createAddress",
-      "description": "Create a new address",
-      "equivalent": "POST",
-      "example": {
-        "request": {
-          "query": "mutation CreateAddress($input: AddressInput!) { createAddress(input: $input) { id street city } }",
-          "variables": {
-            "input": {
-              "street": "123 Main St",
-              "city": "Paris"
-            }
-          }
-        },
-        "response": {
-          "data": {
-            "createAddress": {
-              "id": "123e4567-e89b-12d3-a456-426614174011",
-              "street": "123 Main St",
-              "city": "Paris"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation updateAddress",
-      "description": "Update an existing address",
-      "equivalent": "PUT",
-      "example": {
-        "request": {
-          "query": "mutation UpdateAddress($id: ID!, $input: AddressInput!) { updateAddress(id: $id, input: $input) { id street } }",
-          "variables": {
-            "id": "123e4567-e89b-12d3-a456-426614174011",
-            "input": {
-              "street": "456 Main St"
-            }
-          }
-        },
-        "response": {
-          "data": {
-            "updateAddress": {
-              "id": "123e4567-e89b-12d3-a456-426614174011",
-              "street": "456 Main St"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation deleteAddress",
-      "description": "Delete an address by ID",
-      "equivalent": "DELETE",
-      "example": {
-        "request": {
-          "query": "mutation DeleteAddress($id: ID!) { deleteAddress(id: $id) }",
-          "variables": { "id": "123e4567-e89b-12d3-a456-426614174011" }
-        },
-        "response": {
-          "data": {
-            "deleteAddress": true
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation createUser",
-      "description": "Create a new user",
-      "equivalent": "POST",
-      "example": {
-        "request": {
-          "query": "mutation CreateUser($input: UserInput!) { createUser(input: $input) { id name email role status } }",
-          "variables": {
-            "input": {
-              "name": "John Doe",
-              "email": "john@example.com",
-              "role": "Admin",
-              "status": "Active"
-            }
-          }
-        },
-        "response": {
-          "data": {
-            "createUser": {
-              "id": "123e4567-e89b-12d3-a456-426614174012",
-              "name": "John Doe",
-              "email": "john@example.com",
-              "role": "Admin",
-              "status": "Active"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation updateUser",
-      "description": "Update an existing user",
-      "equivalent": "PUT",
-      "example": {
-        "request": {
-          "query": "mutation UpdateUser($id: ID!, $input: UserInput!) { updateUser(id: $id, input: $input) { id name email role status } }",
-          "variables": {
-            "id": "123e4567-e89b-12d3-a456-426614174012",
-            "input": {
-              "name": "John Doe",
-              "email": "john@example.com",
-              "role": "Admin",
-              "status": "Active"
-            }
-          }
-        },
-        "response": {
-          "data": {
-            "updateUser": {
-              "id": "123e4567-e89b-12d3-a456-426614174012",
-              "name": "John Doe",
-              "email": "john@example.com",
-              "role": "Admin",
-              "status": "Active"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operation": "mutation deleteUser",
-      "description": "Delete a user by ID",
-      "equivalent": "DELETE",
-      "example": {
-        "request": {
-          "query": "mutation DeleteUser($id: ID!) { deleteUser(id: $id) }",
-          "variables": { "id": "123e4567-e89b-12d3-a456-426614174012" }
-        },
-        "response": {
-          "data": {
-            "deleteUser": true
           }
         }
       }

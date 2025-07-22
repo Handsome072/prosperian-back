@@ -4,6 +4,7 @@ const supabase = require('../config/supabase');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
+const parse = require('csv-parse/lib/sync');
 
 // Configuration de multer pour l'upload de fichiers
 const storage = multer.diskStorage({
@@ -300,6 +301,95 @@ router.get('/:id/download', async (req, res) => {
   } catch (err) {
     console.error('Erreur lors du téléchargement de la liste:', err);
     res.status(500).json({ error: 'Erreur lors du téléchargement de la liste' });
+  }
+});
+
+// GET CSV content by list id
+router.get('/:id/content', async (req, res) => {
+  try {
+    const { id } = req.params;
+    // Récupérer la liste pour obtenir le chemin du fichier
+    const { data, error } = await supabase
+      .from('liste')
+      .select('path')
+      .eq('id', id)
+      .single();
+    if (error || !data) {
+      return res.status(404).json({ error: 'Liste non trouvée' });
+    }
+    const filePath = path.join(__dirname, '../..', data.path);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'Fichier CSV non trouvé' });
+    }
+    const fileContent = fs.readFileSync(filePath, 'utf8');
+    // Parser le CSV en JSON
+    let records;
+    try {
+      records = parse(fileContent, {
+        columns: true,
+        skip_empty_lines: true,
+        delimiter: '\t',
+        relax_column_count: true,
+        relax_quotes: true,
+        skip_records_with_error: true,
+        relax: true
+      });
+    } catch (err) {
+      console.error('Erreur détaillée parsing CSV:', err);
+      return res.status(500).json({ error: 'Erreur lors du parsing du CSV', details: err && err.message ? err.message : err });
+    }
+    res.json(records);
+  } catch (err) {
+    console.error('Erreur lors de la lecture du contenu CSV:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// GET only the first column of the CSV by list id
+router.get('/:id/first-column', async (req, res) => {
+  try {
+    const { id } = req.params;
+    // Récupérer la liste pour obtenir le chemin du fichier
+    const { data, error } = await supabase
+      .from('liste')
+      .select('path')
+      .eq('id', id)
+      .single();
+    if (error || !data) {
+      return res.status(404).json({ error: 'Liste non trouvée' });
+    }
+    const filePath = path.join(__dirname, '../..', data.path);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'Fichier CSV non trouvé' });
+    }
+    const fileContent = fs.readFileSync(filePath, 'utf8');
+    // Parser le CSV en JSON
+    let records;
+    try {
+      records = parse(fileContent, {
+        columns: true,
+        skip_empty_lines: true,
+        delimiter: '\t',
+        relax_column_count: true,
+        relax_quotes: true,
+        skip_records_with_error: true,
+        relax: true
+      });
+    } catch (err) {
+      console.error('Erreur détaillée parsing CSV:', err);
+      return res.status(500).json({ error: 'Erreur lors du parsing du CSV', details: err && err.message ? err.message : err });
+    }
+    // Récupérer le nom de la première colonne
+    const firstColName = records.length > 0 ? Object.keys(records[0])[0] : null;
+    if (!firstColName) {
+      return res.json([]);
+    }
+    // Extraire uniquement la première colonne
+    const firstColValues = records.map(row => row[firstColName]);
+    res.json(firstColValues);
+  } catch (err) {
+    console.error('Erreur lors de la lecture de la première colonne du CSV:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 

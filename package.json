@@ -17,6 +17,8 @@
     "@graphql-tools/schema": "^10.0.23",
     "@supabase/supabase-js": "^2.50.3",
     "axios": "^1.10.0",
+    "csv-parse": "^4.16.3",
+    "csv-parser": "^3.2.0",
     "dotenv": "^17.0.1",
     "express": "^5.1.0",
     "graphql": "^16.11.0",
