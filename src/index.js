@@ -60,6 +60,8 @@ app.use('/api/search', require('./routes/search'));
 app.use('/api/pronto', require('./routes/pronto'));
 app.use('/api/pronto-workflows', require('./routes/pronto-workflows'));
 app.use('/api/pronto/workflows', require('./routes/pronto-workflows'));
+app.use('/api/google-places', require('./routes/google-places'));
+app.use('/api/semantic', require('./routes/semantic-search'));
 
 app.get('/', (req, res) => {
   res.json({
