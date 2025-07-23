@@ -2,13 +2,82 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 
+// Fonction utilitaire pour calculer l'âge d'une entreprise
+const calculateCompanyAge = (dateCreation) => {
+  if (!dateCreation) return null;
+  const creationDate = new Date(dateCreation);
+  const currentDate = new Date();
+  return currentDate.getFullYear() - creationDate.getFullYear();
+};
+
+// Fonction pour enrichir les résultats avec l'âge des entreprises via l'API INSEE
+const enrichWithCompanyAge = async (companies) => {
+  const accessToken = process.env.INSEE_ACCESS_TOKEN;
+  if (!accessToken) {
+    console.warn('INSEE_ACCESS_TOKEN non configuré, impossible de calculer l\'âge des entreprises');
+    return companies;
+  }
+
+  const enrichedCompanies = await Promise.all(
+    companies.map(async (company) => {
+      try {
+        // Utiliser le SIREN pour récupérer les informations via l'API INSEE
+        if (company.siren) {
+          const inseeResponse = await axios.get('https://api.insee.fr/entreprises/sirene/V3.11/siren', {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`
+            },
+            params: {
+              q: `siren:${company.siren}`,
+              nombre: 1
+            },
+            timeout: 2000 // Timeout pour éviter les blocages
+          });
+
+          if (inseeResponse.data?.unitesLegales?.[0]?.dateCreationUniteLegale) {
+            const dateCreation = inseeResponse.data.unitesLegales[0].dateCreationUniteLegale;
+            const age = calculateCompanyAge(dateCreation);
+            return {
+              ...company,
+              date_creation: dateCreation,
+              age_entreprise: age
+            };
+          }
+        }
+        return company;
+      } catch (error) {
+        // En cas d'erreur, on retourne l'entreprise sans enrichissement
+        console.warn(`Erreur lors de l'enrichissement de l'entreprise ${company.nom_complet}:`, error.message);
+        return company;
+      }
+    })
+  );
+
+  return enrichedCompanies;
+};
+
+// Fonction pour filtrer les entreprises par âge
+const filterByAge = (companies, ageMin, ageMax) => {
+  if (!ageMin && !ageMax) return companies;
+  
+  return companies.filter(company => {
+    const age = company.age_entreprise;
+    if (age === null || age === undefined) return true; // Garder les entreprises sans âge connu
+    
+    if (ageMin && age < ageMin) return false;
+    if (ageMax && age > ageMax) return false;
+    return true;
+  });
+};
+
 /**
  * @swagger
  * /api/search:
  *   get:
- *     summary: Recherche d'entreprises avancée (proxy API publique)
+ *     summary: Recherche d'entreprises avancée avec filtres d'âge et chiffres clés
  *     description: >-
- *       Proxy vers https://recherche-entreprises.api.gouv.fr/search avec tous les paramètres supportés par l'API publique. Retourne la réponse brute de l'API publique.
+ *       Proxy vers https://recherche-entreprises.api.gouv.fr/search avec enrichissement des données d'âge d'entreprise via l'API INSEE SIRENE.
+ *       Supporte tous les paramètres de l'API publique plus les filtres d'âge.
  *     tags:
  *       - Entreprise
  *     parameters:
@@ -18,6 +87,20 @@ const axios = require('axios');
  *           type: string
  *         required: false
  *         description: Recherche plein texte (ex: q=test)
+ *       - in: query
+ *         name: age_min
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         example: 5
+ *         description: Âge minimum de l'entreprise en années
+ *       - in: query
+ *         name: age_max
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         example: 50
+ *         description: Âge maximum de l'entreprise en années
  *       - in: query
  *         name: activite_principale
  *         schema:
@@ -373,7 +456,7 @@ const axios = require('axios');
  *         description: Le nombre de résultats par page, limité à 25.
  *     responses:
  *       200:
- *         description: Résultat de la recherche d'entreprises
+ *         description: Résultat de la recherche d'entreprises avec enrichissement d'âge
  *         content:
  *           application/json:
  *             example:
@@ -385,16 +468,65 @@ const axios = require('axios');
  */
 router.get('/', async (req, res) => {
   try {
+    // Extraire les paramètres d'âge personnalisés
+    const { age_min, age_max, ...govApiParams } = req.query;
+
+    console.log('🔍 Recherche d\'entreprises avec filtres:', {
+      age_min,
+      age_max,
+      ca_min: govApiParams.ca_min,
+      ca_max: govApiParams.ca_max
+    });
+
+    // Appel à l'API gouvernementale avec tous les paramètres sauf age_min/age_max
     const response = await axios.get('https://recherche-entreprises.api.gouv.fr/search', {
-      params: req.query,
+      params: govApiParams,
       headers: { 'accept': 'application/json' }
     });
-    res.json(response.data);
+
+    let results = response.data.results || [];
+
+    // Si des filtres d'âge sont spécifiés, enrichir les données avec l'âge des entreprises
+    if ((age_min || age_max) && results.length > 0) {
+      console.log(`🏢 Enrichissement de ${results.length} entreprises avec leur âge...`);
+      
+      // Enrichir avec l'âge des entreprises
+      results = await enrichWithCompanyAge(results);
+      
+      // Filtrer par âge
+      const ageMinNum = age_min ? parseInt(age_min, 10) : null;
+      const ageMaxNum = age_max ? parseInt(age_max, 10) : null;
+      results = filterByAge(results, ageMinNum, ageMaxNum);
+      
+      console.log(`✅ ${results.length} entreprises après filtrage par âge`);
+    }
+
+    // Retourner les résultats enrichis
+    res.json({
+      ...response.data,
+      results: results,
+      enriched_with_age: !!(age_min || age_max),
+      filters_applied: {
+        age_min: age_min ? parseInt(age_min, 10) : null,
+        age_max: age_max ? parseInt(age_max, 10) : null,
+        ca_min: govApiParams.ca_min ? parseInt(govApiParams.ca_min, 10) : null,
+        ca_max: govApiParams.ca_max ? parseInt(govApiParams.ca_max, 10) : null
+      }
+    });
+
   } catch (error) {
+    console.error('❌ Erreur lors de la recherche d\'entreprises:', error.message);
+    
     if (error.response) {
-      res.status(error.response.status).json({ error: error.response.data });
+      res.status(error.response.status).json({ 
+        error: error.response.data,
+        message: 'Erreur lors de l\'appel à l\'API de recherche d\'entreprises'
+      });
     } else {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ 
+        error: error.message,
+        message: 'Erreur interne du serveur'
+      });
     }
   }
 });
