@@ -1244,31 +1244,11 @@
                 "schema": { 
                   "type": "object",
                   "properties": {
-                    "enriched_contacts": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/ProntoContact"
-                      }
-                    },
-                    "total_processed": { "type": "integer", "description": "Total number of contacts processed" },
-                    "successful": { "type": "integer", "description": "Number of successfully enriched contacts" }
+                    "enrichment_id": { "type": "string", "description": "ID de l'enrichissement en base Pronto" }
                   }
                 },
                 "example": {
-                  "enriched_contacts": [
-                    {
-                      "uuid": "123e4567-e89b-12d3-a456-426614174000",
-                      "firstname": "Hélène",
-                      "lastname": "Mariette",
-                      "company_name": "Vivinnov",
-                      "phone": "+33123456789",
-                      "job_title": "CEO",
-                      "linkedin_url": "https://www.linkedin.com/company/71078455",
-                      "domain": "http://www.vivinnov.com"
-                    }
-                  ],
-                  "total_processed": 1,
-                  "successful": 1
+                  "enrichment_id": "fbbf2eef-b56f-4bbc-8b51-ada6ca9e4cac"
                 }
               } 
             } 
