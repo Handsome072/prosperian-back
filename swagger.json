@@ -1190,7 +1190,7 @@
     "/api/pronto/enrichments/contacts/bulk": {
       "post": { 
         "summary": "Bulk contact enrichment", 
-        "description": "Enriches multiple contacts with email and phone data in batch",
+        "description": "Enriches multiple contacts with phone data in batch. Requires X-API-KEY header.",
         "tags": ["Pronto"], 
         "requestBody": { 
           "required": true, 
@@ -1204,32 +1204,34 @@
                     "items": {
                       "type": "object",
                       "properties": {
-                        "first_name": { "type": "string", "description": "Contact's first name" },
-                        "last_name": { "type": "string", "description": "Contact's last name" },
-                        "company": { "type": "string", "description": "Contact's company" },
-                        "domain": { "type": "string", "description": "Company domain" }
+                        "firstname": { "type": "string", "description": "Contact's first name" },
+                        "lastname": { "type": "string", "description": "Contact's last name" },
+                        "company_name": { "type": "string", "description": "Contact's company name" },
+                        "linkedin_url": { "type": "string", "description": "LinkedIn profile URL" },
+                        "domain": { "type": "string", "description": "Company domain (URL)" }
                       },
-                      "required": ["first_name", "last_name", "company"]
+                      "required": ["firstname", "lastname", "company_name"]
                     }
+                  },
+                  "enrichment_type": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "Types of enrichment requested (e.g. phone, email, etc.)"
                   }
                 },
-                "required": ["contacts"]
+                "required": ["contacts", "enrichment_type"]
               },
               "example": {
                 "contacts": [
                   {
-                    "first_name": "John",
-                    "last_name": "Doe",
-                    "company": "TechCorp",
-                    "domain": "techcorp.com"
-                  },
-                  {
-                    "first_name": "Jane",
-                    "last_name": "Smith",
-                    "company": "TechCorp",
-                    "domain": "techcorp.com"
+                    "firstname": "Hélène",
+                    "lastname": "Mariette",
+                    "company_name": "Vivinnov",
+                    "linkedin_url": "https://www.linkedin.com/company/71078455",
+                    "domain": "http://www.vivinnov.com"
                   }
-                ]
+                ],
+                "enrichment_type": ["phone"]
               }
             } 
           } 
@@ -1256,16 +1258,16 @@
                   "enriched_contacts": [
                     {
                       "uuid": "123e4567-e89b-12d3-a456-426614174000",
-                      "first_name": "John",
-                      "last_name": "Doe",
-                      "email": "john.doe@techcorp.com",
+                      "firstname": "Hélène",
+                      "lastname": "Mariette",
+                      "company_name": "Vivinnov",
                       "phone": "+33123456789",
-                      "job_title": "Software Engineer",
-                      "company": "TechCorp",
-                      "linkedin_url": "https://linkedin.com/in/johndoe"
+                      "job_title": "CEO",
+                      "linkedin_url": "https://www.linkedin.com/company/71078455",
+                      "domain": "http://www.vivinnov.com"
                     }
                   ],
-                  "total_processed": 2,
+                  "total_processed": 1,
                   "successful": 1
                 }
               } 

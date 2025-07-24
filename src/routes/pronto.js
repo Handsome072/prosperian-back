@@ -215,7 +215,17 @@ router.post('/enrichments/contact', async (req, res) => {
 
 router.post('/enrichments/contacts/bulk', async (req, res) => {
   try {
-    const response = await prontoClient.post('/enrichments/contacts/bulk', req.body);
+    const axios = require('axios');
+    const response = await axios.post(
+      'https://app.prontohq.com/api/v2/contacts/bulk_enrich',
+      req.body,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-KEY': 'b4-tQyxNcSR2SX6_oYE3ZGTTeZRwBgT1kpGiMgusfzqYcQnXzw'
+        }
+      }
+    );
     res.json(response.data);
   } catch (error) {
     res.status(error.response?.status || 500).json({
