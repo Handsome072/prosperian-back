@@ -961,6 +961,59 @@
         } 
       }
     },
+    "/api/pronto/leads": {
+  "post": {
+    "summary": "Créer un lead sur ProntoHQ",
+    "description": "Crée un lead via l'API ProntoHQ (https://app.prontohq.com/api/v2/leads).",
+    "tags": ["Pronto"],
+    "requestBody": {
+      "required": true,
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "search_url": { "type": "string", "description": "URL de recherche Pronto" },
+              "webhook_url": { "type": "string", "description": "URL du webhook pour recevoir les résultats" },
+              "name": { "type": "string", "description": "Nom du lead" },
+              "streaming": { "type": "boolean", "description": "Activer le streaming des résultats" },
+              "custom": {
+                "type": "object",
+                "properties": {
+                  "hubspot_id": { "type": "string", "description": "ID Hubspot personnalisé" }
+                }
+              },
+              "limit": { "type": "integer", "description": "Nombre maximum de leads à retourner" }
+            },
+            "required": ["search_url", "webhook_url", "name", "streaming", "custom", "limit"]
+          },
+          "example": {
+            "search_url": "https://app.prontohq.com/search/123456",
+            "webhook_url": "https://monapp.com/webhook",
+            "name": "Ma recherche de leads",
+            "streaming": true,
+            "custom": { "hubspot_id": "134567" },
+            "limit": 100
+          }
+        }
+      }
+    },
+    "responses": {
+      "201": {
+        "description": "Lead créé avec succès sur ProntoHQ",
+        "content": {
+          "application/json": {
+            "schema": { "type": "object" },
+            "example": { "id": "lead_123456", "status": "created" }
+          }
+        }
+      },
+      "400": { "description": "Requête invalide" },
+      "401": { "description": "Clé API invalide" },
+      "500": { "description": "Erreur serveur interne" }
+    }
+  }
+},
     "/api/pronto/leads/company": {
       "post": { 
         "summary": "Extract leads from a company", 

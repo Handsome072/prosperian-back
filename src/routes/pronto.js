@@ -125,6 +125,17 @@ router.get('/searches/:id/leads', async (req, res) => {
   }
 });
 
+router.post('/leads', async (req, res) => {
+  try {
+    const response = await prontoClient.post('/leads', req.body);
+    res.status(201).json(response.data);
+  } catch (error) {
+    res.status(error.response?.status || 500).json({
+      error: error.response?.data || error.message
+    });
+  }
+});
+
 router.post('/accounts/profiles', async (req, res) => {
   try {
     const response = await prontoClient.post('/accounts/profiles', req.body);
