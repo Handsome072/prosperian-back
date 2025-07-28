@@ -34,6 +34,8 @@ const server = new ApolloServer({
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/utilisateur', require('./routes/utilisateur'));
 app.use('/api/address', require('./routes/address'));
 app.use('/api/beneficial_owner', require('./routes/beneficial_owner'));
 app.use('/api/bodacc_notice', require('./routes/bodacc_notice'));
