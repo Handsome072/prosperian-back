@@ -64,6 +64,7 @@ app.use('/api/pronto-workflows', require('./routes/pronto-workflows'));
 app.use('/api/pronto/workflows', require('./routes/pronto-workflows'));
 app.use('/api/google-places', require('./routes/google-places'));
 app.use('/api/semantic', require('./routes/semantic-search'));
+app.use('/api/enrichment', require('./routes/enrichment'));
 
 app.get('/', (req, res) => {
   res.json({
@@ -73,7 +74,10 @@ app.get('/', (req, res) => {
       graphql: '/graphql',
       swagger: '/api-docs',
       pronto: '/api/pronto',
-      prontoWorkflows: '/api/pronto-workflows'
+      prontoWorkflows: '/api/pronto-workflows',
+      enrichment: '/api/enrichment',
+      semantic: '/api/semantic',
+      googlePlaces: '/api/google-places'
     }
   });
 });

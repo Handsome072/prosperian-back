@@ -3811,6 +3811,495 @@
           "500": { "description": "Erreur serveur ou erreur de l'API publique" }
         }
       }
+    },
+    "/api/enrichment": {
+      "post": {
+        "summary": "Créer un nouvel enrichment",
+        "tags": ["Enrichment"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "type"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Nom de l'enrichment"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Type d'enrichment"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Description optionnelle"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Enrichment créé avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "enrichment": {
+                      "$ref": "#/components/schemas/Enrichment"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Données invalides"
+          },
+          "401": {
+            "description": "Non authentifié"
+          }
+        }
+      },
+      "get": {
+        "summary": "Récupérer tous les enrichments de l'utilisateur",
+        "tags": ["Enrichment"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "Numéro de page"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "Nombre d'éléments par page"
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filtrer par statut"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste des enrichments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "enrichments": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Enrichment"
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "integer"
+                        },
+                        "limit": {
+                          "type": "integer"
+                        },
+                        "total": {
+                          "type": "integer"
+                        },
+                        "totalPages": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/enrichment/{id}": {
+      "get": {
+        "summary": "Récupérer un enrichment par ID",
+        "tags": ["Enrichment"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID de l'enrichment"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Enrichment trouvé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "enrichment": {
+                      "$ref": "#/components/schemas/Enrichment"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Enrichment non trouvé"
+          }
+        }
+      },
+      "put": {
+        "summary": "Mettre à jour un enrichment",
+        "tags": ["Enrichment"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID de l'enrichment"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": ["En cours", "Terminé", "Échec"]
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Enrichment mis à jour"
+          },
+          "404": {
+            "description": "Enrichment non trouvé"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Supprimer un enrichment",
+        "tags": ["Enrichment"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID de l'enrichment"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Enrichment supprimé"
+          },
+          "404": {
+            "description": "Enrichment non trouvé"
+          }
+        }
+      }
+    },
+    "/api/enrichment/{enrichmentId}/leads": {
+      "post": {
+        "summary": "Ajouter un lead enrichi à un enrichment",
+        "tags": ["LeadEnrich"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "enrichmentId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID de l'enrichment parent"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["firstname", "lastname"],
+                "properties": {
+                  "firstname": {
+                    "type": "string",
+                    "description": "Prénom du lead"
+                  },
+                  "lastname": {
+                    "type": "string",
+                    "description": "Nom du lead"
+                  },
+                  "company_name": {
+                    "type": "string",
+                    "description": "Nom de l'entreprise"
+                  },
+                  "domain": {
+                    "type": "string",
+                    "description": "Domaine de l'entreprise"
+                  },
+                  "linkedin_url": {
+                    "type": "string",
+                    "description": "URL LinkedIn"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Lead enrichi créé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "leadEnrich": {
+                      "$ref": "#/components/schemas/LeadEnrich"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Enrichment non trouvé"
+          }
+        }
+      },
+      "get": {
+        "summary": "Récupérer tous les leads enrichis d'un enrichment",
+        "tags": ["LeadEnrich"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "enrichmentId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID de l'enrichment parent"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "Numéro de page"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "Nombre d'éléments par page"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste des leads enrichis",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "leads": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/LeadEnrich"
+                      }
+                    },
+                    "pagination": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Enrichment non trouvé"
+          }
+        }
+      }
+    },
+    "/api/enrichment/{enrichmentId}/leads/bulk": {
+      "post": {
+        "summary": "Ajouter plusieurs leads enrichis en lot",
+        "tags": ["LeadEnrich"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "enrichmentId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID de l'enrichment parent"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["leads"],
+                "properties": {
+                  "leads": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["firstname", "lastname"],
+                      "properties": {
+                        "firstname": {
+                          "type": "string"
+                        },
+                        "lastname": {
+                          "type": "string"
+                        },
+                        "company_name": {
+                          "type": "string"
+                        },
+                        "domain": {
+                          "type": "string"
+                        },
+                        "linkedin_url": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Leads enrichis créés en lot"
+          },
+          "400": {
+            "description": "Données invalides"
+          },
+          "404": {
+            "description": "Enrichment non trouvé"
+          }
+        }
+      }
     }
   },
   "components": {
