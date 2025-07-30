@@ -65,6 +65,10 @@ app.use('/api/pronto/workflows', require('./routes/pronto-workflows'));
 app.use('/api/google-places', require('./routes/google-places'));
 app.use('/api/semantic', require('./routes/semantic-search'));
 app.use('/api/enrichment', require('./routes/enrichment'));
+app.use('/api/payment', require('./routes/payment'));
+app.use('/api/subscription', require('./routes/admin-subscriptions'));
+app.use('/api/credit-packs', require('./routes/admin-credit-packs'));
+app.use('/api/user-subscriptions', require('./routes/admin-user-subscriptions'));
 
 app.get('/', (req, res) => {
   res.json({
@@ -94,6 +98,7 @@ async function startServer() {
     console.log(`📖 Swagger UI available at http://localhost:${PORT}/api-docs`);
     console.log(`🔗 Pronto API: http://localhost:${PORT}/api/pronto`);
     console.log(`⚡ Pronto Workflows: http://localhost:${PORT}/api/pronto-workflows`);
+    console.log(`💳 Payment API: http://localhost:${PORT}/api/payment`);
   });
 }
 
