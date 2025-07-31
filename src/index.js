@@ -66,6 +66,7 @@ app.use('/api/google-places', require('./routes/google-places'));
 app.use('/api/semantic', require('./routes/semantic-search'));
 app.use('/api/enrichment', require('./routes/enrichment'));
 app.use('/api/payment', require('./routes/payment'));
+app.use('/api/products', require('./routes/products'));
 app.use('/api/subscription', require('./routes/admin-subscriptions'));
 app.use('/api/credit-packs', require('./routes/admin-credit-packs'));
 app.use('/api/user-subscriptions', require('./routes/admin-user-subscriptions'));
