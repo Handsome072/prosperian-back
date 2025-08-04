@@ -333,4 +333,69 @@ router.post('/accounts/single_enrich', async (req, res) => {
   }
 });
 
+// GET /api/pronto/companies/enrich
+router.get('/companies/enrich', async (req, res) => {
+  try {
+    const { name } = req.query;
+    
+    if (!name) {
+      return res.status(400).json({
+        error: 'Le paramètre "name" est requis'
+      });
+    }
+
+    console.log(`🔍 Enrichissement de l'entreprise: ${name}`);
+    console.log(`🔗 URL appelée: ${prontoClient.defaults.baseURL}/companies/enrich?name=${encodeURIComponent(name)}`);
+    
+    let response;
+    
+    // Utiliser directement l'endpoint /accounts/single_enrich qui existe dans l'API v2
+    try {
+      response = await prontoClient.post('/accounts/single_enrich', {
+        name: name
+      });
+      console.log('✅ Succès avec /accounts/single_enrich');
+    } catch (error) {
+      console.error('❌ Erreur avec /accounts/single_enrich');
+      throw error;
+    }
+
+    console.log('✅ Résultat enrichi :');
+    console.log(JSON.stringify(response.data, null, 2));
+
+    // Analyser si l'entreprise a été trouvée
+    const isFound = response.data && (
+      response.data.name || 
+      response.data.website || 
+      response.data.description ||
+      response.data.industry ||
+      response.data.headquarters
+    );
+
+    // Ajouter le champ found à la réponse
+    const enrichedResponse = {
+      found: !!isFound,
+      ...response.data
+    };
+
+    console.log(`🔍 Entreprise trouvée: ${enrichedResponse.found}`);
+
+    res.json(enrichedResponse);
+  } catch (error) {
+    console.error('❌ Erreur lors de l\'enrichissement:', error.message);
+    
+    if (error.response) {
+      console.error('Erreur ProntoHQ:', error.response.data);
+      res.status(error.response.status).json({
+        error: error.response.data
+      });
+    } else {
+      res.status(500).json({
+        error: 'Erreur lors de la requête à ProntoHQ',
+        message: error.message
+      });
+    }
+  }
+});
+
 module.exports = router; 
