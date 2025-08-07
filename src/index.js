@@ -70,6 +70,7 @@ app.use('/api/products', require('./routes/products'));
 app.use('/api/subscription', require('./routes/admin-subscriptions'));
 app.use('/api/credit-packs', require('./routes/admin-credit-packs'));
 app.use('/api/user-subscriptions', require('./routes/admin-user-subscriptions'));
+app.use('/api/linkedin-sales', require('./routes/linkedin-sales'));
 
 app.get('/', (req, res) => {
   res.json({
@@ -82,7 +83,8 @@ app.get('/', (req, res) => {
       prontoWorkflows: '/api/pronto-workflows',
       enrichment: '/api/enrichment',
       semantic: '/api/semantic',
-      googlePlaces: '/api/google-places'
+      googlePlaces: '/api/google-places',
+      linkedinSales: '/api/linkedin-sales'
     }
   });
 });
@@ -100,6 +102,7 @@ async function startServer() {
     console.log(`🔗 Pronto API: http://localhost:${PORT}/api/pronto`);
     console.log(`⚡ Pronto Workflows: http://localhost:${PORT}/api/pronto-workflows`);
     console.log(`💳 Payment API: http://localhost:${PORT}/api/payment`);
+    console.log(`🔍 LinkedIn Sales Navigator API: http://localhost:${PORT}/api/linkedin-sales`);
   });
 }
 

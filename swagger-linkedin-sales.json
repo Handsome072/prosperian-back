@@ -1,0 +1,572 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "LinkedIn Sales Navigator API",
+    "description": "API for generating and parsing LinkedIn Sales Navigator search URLs with advanced filters. Supports both people (prospects) and company searches with comprehensive filter management.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4000",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/api/linkedin-sales": {
+      "get": {
+        "summary": "LinkedIn Sales Navigator API Interface",
+        "description": "Interactive HTML interface for LinkedIn Sales Navigator API. Provides a user-friendly web interface to test all LinkedIn Sales Navigator endpoints including URL generation, parsing, and filter validation.",
+        "tags": ["LinkedIn Sales Navigator"],
+        "responses": {
+          "200": {
+            "description": "HTML interface for LinkedIn Sales Navigator API",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string",
+                  "description": "Complete HTML interface with JavaScript for testing LinkedIn Sales Navigator API"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/linkedin-sales/filter-types": {
+      "get": {
+        "summary": "Get LinkedIn Sales Navigator Filter Types",
+        "description": "Retrieves all available filter types for LinkedIn Sales Navigator searches. Returns different filter types for people (prospects) and company searches.",
+        "tags": ["LinkedIn Sales Navigator"],
+        "responses": {
+          "200": {
+            "description": "Filter types retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Whether the request was successful"
+                    },
+                    "people": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/LinkedInFilterType"
+                      },
+                      "description": "Filter types available for people searches"
+                    },
+                    "company": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/LinkedInFilterType"
+                      },
+                      "description": "Filter types available for company searches"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "people": [
+                    {
+                      "type": "CURRENT_COMPANY",
+                      "name": "Current Company",
+                      "description": "Filter by current company"
+                    }
+                  ],
+                  "company": [
+                    {
+                      "type": "INDUSTRY",
+                      "name": "Industry",
+                      "description": "Filter by industry"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/linkedin-sales/generate-url": {
+      "post": {
+        "summary": "Generate LinkedIn Sales Navigator URL",
+        "description": "Generates a LinkedIn Sales Navigator search URL with advanced filters. Supports both people (prospects) and company searches. Filters are encoded in the query parameter of the URL.",
+        "tags": ["LinkedIn Sales Navigator"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkedInSearchRequest"
+              },
+              "examples": {
+                "people_search": {
+                  "summary": "People search with filters",
+                  "value": {
+                    "searchType": "people",
+                    "keywords": "développeur",
+                    "filters": [
+                      {
+                        "type": "CURRENT_COMPANY",
+                        "values": [
+                          {
+                            "id": "urn:li:organization:825160",
+                            "text": "Hyundai Motor Company",
+                            "selectionType": "INCLUDED"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "company_search": {
+                  "summary": "Company search with filters",
+                  "value": {
+                    "searchType": "company",
+                    "keywords": "technology",
+                    "filters": [
+                      {
+                        "type": "INDUSTRY",
+                        "values": [
+                          {
+                            "id": "urn:li:industry:4",
+                            "text": "Computer Software",
+                            "selectionType": "INCLUDED"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "URL generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkedInSearchResponse"
+                },
+                "example": {
+                  "success": true,
+                  "url": "https://www.linkedin.com/sales/search/people?query=(spellCorrectionEnabled:true,keywords:développeur,filters:List((type:CURRENT_COMPANY,values:List((id:urn:li:organization:825160,text:\"Hyundai Motor Company\",selectionType:INCLUDED)))))",
+                  "searchType": "people",
+                  "filters": [
+                    {
+                      "type": "CURRENT_COMPANY",
+                      "values": [
+                        {
+                          "id": "urn:li:organization:825160",
+                          "text": "Hyundai Motor Company",
+                          "selectionType": "INCLUDED"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid search parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/linkedin-sales/parse-url": {
+      "post": {
+        "summary": "Parse LinkedIn Sales Navigator URL",
+        "description": "Parses a LinkedIn Sales Navigator search URL to extract search parameters, filters, and keywords. Supports both people and company search URLs.",
+        "tags": ["LinkedIn Sales Navigator"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "description": "LinkedIn Sales Navigator search URL to parse",
+                    "format": "uri"
+                  }
+                },
+                "required": ["url"]
+              },
+              "example": {
+                "url": "https://www.linkedin.com/sales/search/people?query=(spellCorrectionEnabled:true,keywords:développeur,filters:List((type:CURRENT_COMPANY,values:List((id:urn:li:organization:825160,text:\"Hyundai Motor Company\",selectionType:INCLUDED)))))"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "URL parsed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Whether the parsing was successful"
+                    },
+                    "searchType": {
+                      "type": "string",
+                      "enum": ["people", "company"],
+                      "description": "Type of search (people or company)"
+                    },
+                    "keywords": {
+                      "type": "string",
+                      "description": "Search keywords extracted from URL"
+                    },
+                    "filters": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/LinkedInSearchFilters"
+                      },
+                      "description": "Filters extracted from URL"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Success message"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "searchType": "people",
+                  "keywords": "développeur",
+                  "filters": [
+                    {
+                      "type": "CURRENT_COMPANY",
+                      "values": [
+                        {
+                          "id": "urn:li:organization:825160",
+                          "text": "Hyundai Motor Company",
+                          "selectionType": "INCLUDED"
+                        }
+                      ]
+                    }
+                  ],
+                  "message": "URL parsed successfully"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid URL format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/linkedin-sales/validate-filters": {
+      "post": {
+        "summary": "Validate LinkedIn Sales Navigator Filters",
+        "description": "Validates LinkedIn Sales Navigator search filters for a given search type. Checks filter compatibility and provides warnings for potential issues.",
+        "tags": ["LinkedIn Sales Navigator"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "searchType": {
+                    "type": "string",
+                    "enum": ["people", "company"],
+                    "description": "Type of search (people or company)"
+                  },
+                  "filters": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/LinkedInSearchFilters"
+                    },
+                    "description": "Filters to validate"
+                  }
+                },
+                "required": ["searchType"]
+              },
+              "example": {
+                "searchType": "people",
+                "filters": [
+                  {
+                    "type": "CURRENT_COMPANY",
+                    "values": [
+                      {
+                        "id": "urn:li:organization:825160",
+                        "text": "Hyundai Motor Company",
+                        "selectionType": "INCLUDED"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Filters validated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Whether the validation was successful"
+                    },
+                    "valid": {
+                      "type": "boolean",
+                      "description": "Whether the filters are valid"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Validation errors, if any"
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Validation warnings, if any"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Validation result message"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "valid": true,
+                  "errors": [],
+                  "warnings": [],
+                  "message": "Filters are valid"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid filter format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "LinkedInFilterType": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Filter type identifier"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable filter name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Filter description"
+          }
+        },
+        "required": ["type", "name"]
+      },
+      "LinkedInFilterValue": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the filter value (e.g., URN LinkedIn for companies)"
+          },
+          "text": {
+            "type": "string",
+            "description": "Display text for the filter"
+          },
+          "selectionType": {
+            "type": "string",
+            "enum": ["INCLUDED", "EXCLUDED"],
+            "default": "INCLUDED",
+            "description": "Whether to include or exclude this value"
+          }
+        },
+        "required": ["id", "text"]
+      },
+      "LinkedInSearchFilters": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Type of LinkedIn Sales Navigator filter"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LinkedInFilterValue"
+            },
+            "description": "Filter values to apply"
+          }
+        },
+        "required": ["type", "values"]
+      },
+      "LinkedInSearchRequest": {
+        "type": "object",
+        "required": ["searchType"],
+        "properties": {
+          "searchType": {
+            "type": "string",
+            "enum": ["people", "company"],
+            "description": "Type of search - people for prospects, company for companies"
+          },
+          "keywords": {
+            "type": "string",
+            "description": "Generic search keywords"
+          },
+          "filters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LinkedInSearchFilters"
+            },
+            "description": "List of filters to apply"
+          },
+          "sessionId": {
+            "type": "string",
+            "description": "LinkedIn session ID (optional)"
+          },
+          "viewAllFilters": {
+            "type": "boolean",
+            "default": false,
+            "description": "Show all available filters"
+          }
+        }
+      },
+      "LinkedInSearchResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "url": {
+            "type": "string",
+            "description": "Complete LinkedIn Sales Navigator search URL"
+          },
+          "searchType": {
+            "type": "string",
+            "enum": ["people", "company"]
+          },
+          "filters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LinkedInSearchFilters"
+            }
+          },
+          "message": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+} 
