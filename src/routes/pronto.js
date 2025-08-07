@@ -1492,36 +1492,24 @@ router.get('/workflow/global-results', async (req, res) => {
     const limitNum = Math.min(Math.max(parseInt(limit) || 1000, 1), 10000);
     const includeSearchDetails = include_search_details === 'true';
 
-    // Parsing de tous les filtres
-    const companyFilters = company_filter
-      .split(',')
-      .map(name => name.trim().toLowerCase())
-      .filter(name => name.length > 0);
+    // Fonction utilitaire pour parser les filtres de manière sécurisée
+    const parseFilter = (filterString) => {
+      if (!filterString || typeof filterString !== 'string') {
+        return [];
+      }
+      return filterString
+        .split(',')
+        .map(item => item.trim().toLowerCase())
+        .filter(item => item.length > 0);
+    };
 
-    const titleFilters = title_filter
-      .split(',')
-      .map(title => title.trim().toLowerCase())
-      .filter(title => title.length > 0);
-
-    const leadLocationFilters = lead_location_filter
-      .split(',')
-      .map(location => location.trim().toLowerCase())
-      .filter(location => location.length > 0);
-
-    const employeeRangeFilters = employee_range_filter
-      .split(',')
-      .map(range => range.trim().toLowerCase())
-      .filter(range => range.length > 0);
-
-    const companyLocationFilters = company_location_filter
-      .split(',')
-      .map(location => location.trim().toLowerCase())
-      .filter(location => location.length > 0);
-
-    const industryFilters = industry_filter
-      .split(',')
-      .map(industry => industry.trim().toLowerCase())
-      .filter(industry => industry.length > 0);
+    // Parsing de tous les filtres avec gestion sécurisée
+    const companyFilters = parseFilter(company_filter);
+    const titleFilters = parseFilter(title_filter);
+    const leadLocationFilters = parseFilter(lead_location_filter);
+    const employeeRangeFilters = parseFilter(employee_range_filter);
+    const companyLocationFilters = parseFilter(company_location_filter);
+    const industryFilters = parseFilter(industry_filter);
 
     console.log(`🔍 Filtres appliqués:`);
     console.log(`   - Entreprises: [${companyFilters.join(', ')}]`);
@@ -1610,55 +1598,87 @@ router.get('/workflow/global-results', async (req, res) => {
                       leadLocationFilters.length > 0 || employeeRangeFilters.length > 0 ||
                       companyLocationFilters.length > 0 || industryFilters.length > 0;
 
-    if (hasFilters) {
-      console.log('🔍 Étape 3: Application des filtres...');
+    console.log('🔍 Étape 3: Analyse des filtres...');
+    console.log(`📊 Filtres reçus:`);
+    console.log(`   - Entreprises: ${companyFilters.length > 0 ? `[${companyFilters.join(', ')}]` : 'Aucun'}`);
+    console.log(`   - Titres: ${titleFilters.length > 0 ? `[${titleFilters.join(', ')}]` : 'Aucun'}`);
+    console.log(`   - Localisations leads: ${leadLocationFilters.length > 0 ? `[${leadLocationFilters.join(', ')}]` : 'Aucun'}`);
+    console.log(`   - Tailles entreprises: ${employeeRangeFilters.length > 0 ? `[${employeeRangeFilters.join(', ')}]` : 'Aucun'}`);
+    console.log(`   - Localisations entreprises: ${companyLocationFilters.length > 0 ? `[${companyLocationFilters.join(', ')}]` : 'Aucun'}`);
+    console.log(`   - Secteurs: ${industryFilters.length > 0 ? `[${industryFilters.join(', ')}]` : 'Aucun'}`);
 
-      filteredLeads = allLeads.filter(leadItem => {
+    if (hasFilters) {
+      console.log('✅ Des filtres sont actifs - Application du filtrage...');
+      console.log(`📊 Nombre de leads à filtrer: ${allLeads.length}`);
+
+      filteredLeads = allLeads.filter((leadItem, index) => {
+        try {
         let matches = true;
+
+        // Fonction utilitaire pour convertir en string et toLowerCase de manière sécurisée
+        const safeToLowerCase = (value) => {
+          if (value === null || value === undefined) return '';
+          return String(value).toLowerCase();
+        };
 
         // Filtre par nom d'entreprise
         if (companyFilters.length > 0) {
-          const companyName = (leadItem.company?.name || '').toLowerCase();
+          const companyName = safeToLowerCase(leadItem.company?.name);
           const companyMatches = companyFilters.some(filter => companyName.includes(filter));
           matches = matches && companyMatches;
         }
 
         // Filtre par titre du lead
         if (titleFilters.length > 0) {
-          const leadTitle = (leadItem.lead?.title || '').toLowerCase();
+          const leadTitle = safeToLowerCase(leadItem.lead?.title);
           const titleMatches = titleFilters.some(filter => leadTitle.includes(filter));
           matches = matches && titleMatches;
         }
 
         // Filtre par localisation du lead (peut être dans différents champs)
         if (leadLocationFilters.length > 0) {
-          const leadLocation = (leadItem.lead?.location || leadItem.lead?.current_location || '').toLowerCase();
-          const leadLocationMatches = leadLocationFilters.some(filter => leadLocation.includes(filter));
+          const leadLocation1 = safeToLowerCase(leadItem.lead?.location);
+          const leadLocation2 = safeToLowerCase(leadItem.lead?.current_location);
+          const combinedLeadLocation = `${leadLocation1} ${leadLocation2}`.trim();
+          const leadLocationMatches = leadLocationFilters.some(filter =>
+            combinedLeadLocation.includes(filter) || leadLocation1.includes(filter) || leadLocation2.includes(filter)
+          );
           matches = matches && leadLocationMatches;
         }
 
         // Filtre par taille d'entreprise
         if (employeeRangeFilters.length > 0) {
-          const employeeRange = (leadItem.company?.employee_range || '').toLowerCase();
+          const employeeRange = safeToLowerCase(leadItem.company?.employee_range);
           const employeeRangeMatches = employeeRangeFilters.some(filter => employeeRange.includes(filter));
           matches = matches && employeeRangeMatches;
         }
 
         // Filtre par localisation de l'entreprise
         if (companyLocationFilters.length > 0) {
-          const companyLocation = (leadItem.company?.location || leadItem.company?.headquarters || '').toLowerCase();
-          const companyLocationMatches = companyLocationFilters.some(filter => companyLocation.includes(filter));
+          const companyLocation1 = safeToLowerCase(leadItem.company?.location);
+          const companyLocation2 = safeToLowerCase(leadItem.company?.headquarters);
+          const combinedCompanyLocation = `${companyLocation1} ${companyLocation2}`.trim();
+          const companyLocationMatches = companyLocationFilters.some(filter =>
+            combinedCompanyLocation.includes(filter) || companyLocation1.includes(filter) || companyLocation2.includes(filter)
+          );
           matches = matches && companyLocationMatches;
         }
 
         // Filtre par secteur d'activité
         if (industryFilters.length > 0) {
-          const industry = (leadItem.company?.industry || '').toLowerCase();
+          const industry = safeToLowerCase(leadItem.company?.industry);
           const industryMatches = industryFilters.some(filter => industry.includes(filter));
           matches = matches && industryMatches;
         }
 
         return matches;
+
+        } catch (filterError) {
+          console.error(`❌ Erreur lors du filtrage du lead ${index}:`, filterError.message);
+          console.error(`📊 Données du lead problématique:`, JSON.stringify(leadItem, null, 2));
+          // En cas d'erreur, on exclut ce lead du résultat
+          return false;
+        }
       });
 
       console.log(`✅ Filtrage terminé: ${filteredLeads.length} leads correspondent aux critères sur ${allLeads.length} leads totaux`);
@@ -1670,6 +1690,9 @@ router.get('/workflow/global-results', async (req, res) => {
       if (employeeRangeFilters.length > 0) console.log(`   - Filtre tailles entreprises: ${employeeRangeFilters.length} critère(s)`);
       if (companyLocationFilters.length > 0) console.log(`   - Filtre localisations entreprises: ${companyLocationFilters.length} critère(s)`);
       if (industryFilters.length > 0) console.log(`   - Filtre secteurs: ${industryFilters.length} critère(s)`);
+    } else {
+      console.log('ℹ️ Aucun filtre appliqué - Tous les leads sont retournés');
+      console.log(`📊 Nombre total de leads disponibles: ${allLeads.length}`);
     }
 
     // Limiter le nombre de résultats
@@ -1713,8 +1736,8 @@ router.get('/workflow/global-results', async (req, res) => {
       errors: errors.length > 0 ? errors : undefined,
       processing_time: processingTime,
       message: hasFilters
-        ? `${filteredLeads.length} leads trouvés après filtrage sur ${allLeads.length} leads totaux`
-        : `${filteredLeads.length} leads trouvés au total`
+        ? `${filteredLeads.length} leads trouvés après application des filtres sur ${allLeads.length} leads totaux`
+        : `${filteredLeads.length} leads trouvés au total (aucun filtre appliqué)`
     });
 
   } catch (error) {
@@ -1946,6 +1969,130 @@ router.get('/status', async (req, res) => {
 
 /**
  * @swagger
+ * /api/pronto/companies/enrich:
+ *   get:
+ *     summary: Enrichir une entreprise avec ProntoHQ
+ *     description: >
+ *       Enrichit les données d'une entreprise en utilisant l'API ProntoHQ v2.
+ *       Utilise l'endpoint /accounts/single_enrich de Pronto pour obtenir des informations détaillées sur l'entreprise.
+ *     tags:
+ *       - Pronto
+ *     parameters:
+ *       - name: name
+ *         in: query
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Nom de l'entreprise à enrichir
+ *       - name: domain
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Domaine de l'entreprise (optionnel)
+ *       - name: linkedin_url
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: URL LinkedIn de l'entreprise (optionnel)
+ *       - name: country
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *           default: "FR"
+ *         description: Code pays (par défaut FR)
+ *     responses:
+ *       200:
+ *         description: Entreprise enrichie avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 company:
+ *                   type: object
+ *                   description: Données enrichies de l'entreprise
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Paramètres manquants ou invalides
+ *       500:
+ *         description: Erreur lors de l'enrichissement
+ */
+router.get('/companies/enrich', async (req, res) => {
+  try {
+    const { name, domain, linkedin_url, country = 'FR' } = req.query;
+
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        error: 'Paramètre manquant',
+        message: 'Le nom de l\'entreprise est requis'
+      });
+    }
+
+    console.log('🔍 Enrichissement entreprise:', { name, domain, linkedin_url, country });
+
+    // Préparer les données pour l'API Pronto
+    const enrichmentData = {
+      name: name,
+      country: country
+    };
+
+    // Ajouter les paramètres optionnels s'ils sont fournis
+    if (domain) {
+      enrichmentData.domain = domain;
+    }
+    if (linkedin_url) {
+      enrichmentData.company_linkedin_url = linkedin_url;
+    }
+
+    // Appel à l'API Pronto pour l'enrichissement
+    const response = await prontoClient.post('/accounts/single_enrich', enrichmentData);
+
+    console.log('✅ Enrichissement réussi pour:', name);
+
+    res.json({
+      success: true,
+      company: response.data,
+      message: `Entreprise "${name}" enrichie avec succès`
+    });
+
+  } catch (error) {
+    console.error('❌ Erreur enrichissement entreprise:', error.response?.data || error.message);
+
+    if (error.response?.status === 400) {
+      return res.status(400).json({
+        success: false,
+        error: 'Données invalides',
+        message: 'Les données fournies ne permettent pas l\'enrichissement',
+        details: error.response.data
+      });
+    }
+
+    if (error.response?.status === 404) {
+      return res.status(404).json({
+        success: false,
+        error: 'Entreprise non trouvée',
+        message: `Aucune donnée trouvée pour l'entreprise "${req.query.name}"`
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: 'Erreur serveur',
+      message: 'Erreur lors de l\'enrichissement de l\'entreprise',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * @swagger
  * /api/pronto/health-check:
  *   get:
  *     summary: Vérification de la santé de l'API Pronto
@@ -1965,7 +2112,7 @@ router.get('/health-check', async (req, res) => {
   try {
     // Test simple de connexion à l'API Pronto
     const response = await prontoClient.get('/accounts/count-profiles');
-    
+
     res.json({
       success: true,
       message: "API Pronto accessible",
@@ -1975,7 +2122,7 @@ router.get('/health-check', async (req, res) => {
 
   } catch (error) {
     console.error('❌ Erreur de santé Pronto:', error.response?.status || error.message);
-    
+
     if (error.response?.status === 401) {
       return res.status(401).json({
         success: false,
