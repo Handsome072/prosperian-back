@@ -31,6 +31,14 @@ GET /api/pronto/workflow/global-results
 
 ## Paramètres
 
+### Comportement des Filtres
+
+**Filtres vides** : Si aucun filtre n'est fourni ou si tous les filtres sont vides, **tous les leads** sont retournés (aucun filtrage appliqué).
+
+**Filtres partiels** : Si certains filtres sont fournis et d'autres sont vides, seuls les filtres non vides sont appliqués.
+
+**Nettoyage automatique** : Les espaces en début/fin sont supprimés, les valeurs vides sont ignorées.
+
 ### `company_filter` (optionnel)
 - **Type** : `string`
 - **Description** : Filtre par nom d'entreprise
@@ -183,10 +191,16 @@ GET /api/pronto/workflow/global-results
 
 ## Exemples d'Utilisation
 
-### 1. Récupérer tous les leads (limité à 100)
+### 1. Récupérer tous les leads (aucun filtre)
 
 ```bash
 curl -X GET "http://localhost:4000/api/pronto/workflow/global-results?limit=100"
+```
+
+### 2. Filtres vides explicites (même résultat que ci-dessus)
+
+```bash
+curl -X GET "http://localhost:4000/api/pronto/workflow/global-results?company_filter=&title_filter=&limit=100"
 ```
 
 ### 2. Filtrer par entreprises spécifiques
