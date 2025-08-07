@@ -167,6 +167,109 @@ router.post('/', upload.single('file'), async (req, res) => {
   }
 });
 
+// POST create list from selected businesses
+router.post('/create-from-selection', async (req, res) => {
+  try {
+    const { nom, selectedBusinesses } = req.body;
+
+    if (!nom || !selectedBusinesses || !Array.isArray(selectedBusinesses)) {
+      return res.status(400).json({ 
+        error: 'nom et selectedBusinesses (array) sont requis' 
+      });
+    }
+
+    if (selectedBusinesses.length === 0) {
+      return res.status(400).json({ 
+        error: 'Aucune entreprise sélectionnée' 
+      });
+    }
+
+    // Créer le contenu CSV
+    const csvHeaders = [
+      'Nom',
+      'Activité',
+      'Ville',
+      'Adresse',
+      'Code Postal',
+      'Téléphone',
+      'Forme Juridique',
+      'Description',
+      'Année de création',
+      'Nombre d\'employés',
+      'Chiffre d\'affaires',
+      'SIREN'
+    ];
+
+    const csvContent = [
+      csvHeaders.join(','),
+      ...selectedBusinesses.map(business => [
+        business.name || business.nom_complet || '',
+        business.activity || business.activite_principale || '',
+        business.city || business.siege?.libelle_commune || '',
+        business.address || business.siege?.geo_adresse || '',
+        business.postalCode || business.siege?.code_postal || '',
+        business.phone || '',
+        business.legalForm || business.nature_juridique || '',
+        business.description || '',
+        business.foundedYear || '',
+        business.employeeCount || business.tranche_effectif_salarie || '',
+        business.revenue || '',
+        business.siren || business.id || ''
+      ].map(field => `"${String(field || '').replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    // Générer un nom de fichier unique
+    const timestamp = Date.now();
+    const randomDigits = Math.floor(10000000 + Math.random() * 90000000);
+    const filename = `export_${timestamp}_${randomDigits}.csv`;
+    const filePath = path.join(__dirname, '../../public/list', filename);
+
+    // Créer le dossier s'il n'existe pas
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
+    // Écrire le fichier CSV
+    fs.writeFileSync(filePath, csvContent, 'utf8');
+
+    // Créer l'enregistrement dans la base de données
+    const dbInput = {
+      type: 'Entreprise',
+      nom,
+      elements: selectedBusinesses.length,
+      path: `/public/list/${filename}`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    const { data, error } = await supabase
+      .from('liste')
+      .insert(dbInput)
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Erreur lors de l\'insertion de la liste:', error);
+      // Supprimer le fichier si l'insertion échoue
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      return res.status(400).json({ error: error.message });
+    }
+
+    res.status(201).json({
+      ...data,
+      filePath: dbInput.path,
+      elements: selectedBusinesses.length
+    });
+
+  } catch (err) {
+    console.error('Erreur lors de la création de la liste depuis la sélection:', err);
+    res.status(500).json({ error: 'Erreur lors de la création de la liste' });
+  }
+});
+
 // POST import lists (insertion directe dans la table 'liste')
 router.post('/import', async (req, res) => {
   try {

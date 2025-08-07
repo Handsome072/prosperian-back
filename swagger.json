@@ -1,8 +1,8 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "Supabase GraphQL API",
-    "description": "API for managing companies, establishments, officers, addresses, files, and related data using GraphQL with a Supabase backend. All operations are performed via a single GraphQL endpoint using POST requests.",
+    "title": "Prosperian API - GraphQL & LinkedIn Sales Navigator",
+    "description": "API for managing companies, establishments, officers, addresses, files, and related data using GraphQL with a Supabase backend. All operations are performed via a single GraphQL endpoint using POST requests. Also includes LinkedIn Sales Navigator URL generation and parsing capabilities.",
     "version": "1.0.0"
   },
   "servers": [
@@ -119,6 +119,968 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/linkedin-sales": {
+      "get": {
+        "summary": "LinkedIn Sales Navigator API Interface",
+        "description": "Interactive HTML interface for LinkedIn Sales Navigator API. Provides a user-friendly web interface to test all LinkedIn Sales Navigator endpoints including URL generation, parsing, and filter validation.",
+        "tags": ["LinkedIn Sales Navigator"],
+        "responses": {
+          "200": {
+            "description": "HTML interface for LinkedIn Sales Navigator API",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string",
+                  "description": "Complete HTML interface with JavaScript for testing LinkedIn Sales Navigator API"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/linkedin-sales/filter-types": {
+      "get": {
+        "summary": "Get LinkedIn Sales Navigator Filter Types",
+        "description": "Retrieves all available filter types for LinkedIn Sales Navigator searches. Returns different filter types for people (prospects) and company searches.",
+        "tags": ["LinkedIn Sales Navigator"],
+        "responses": {
+          "200": {
+            "description": "Filter types retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Whether the request was successful"
+                    },
+                    "people": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/LinkedInFilterType"
+                      },
+                      "description": "Filter types available for people searches"
+                    },
+                    "company": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/LinkedInFilterType"
+                      },
+                      "description": "Filter types available for company searches"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "people": [
+                    {
+                      "type": "CURRENT_COMPANY",
+                      "name": "Current Company",
+                      "description": "Filter by current company"
+                    }
+                  ],
+                  "company": [
+                    {
+                      "type": "INDUSTRY",
+                      "name": "Industry",
+                      "description": "Filter by industry"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/linkedin-sales/generate-url": {
+      "post": {
+        "summary": "Generate LinkedIn Sales Navigator URL",
+        "description": "Generates a LinkedIn Sales Navigator search URL with advanced filters. Supports both people (prospects) and company searches. Filters are encoded in the query parameter of the URL.",
+        "tags": ["LinkedIn Sales Navigator"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkedInSearchRequest"
+              },
+              "examples": {
+                "people_search": {
+                  "summary": "People search with filters",
+                  "value": {
+                    "searchType": "people",
+                    "keywords": "développeur",
+                    "filters": [
+                      {
+                        "type": "CURRENT_COMPANY",
+                        "values": [
+                          {
+                            "id": "urn:li:organization:825160",
+                            "text": "Hyundai Motor Company",
+                            "selectionType": "INCLUDED"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "company_search": {
+                  "summary": "Company search with filters",
+                  "value": {
+                    "searchType": "company",
+                    "keywords": "technology",
+                    "filters": [
+                      {
+                        "type": "INDUSTRY",
+                        "values": [
+                          {
+                            "id": "urn:li:industry:4",
+                            "text": "Computer Software",
+                            "selectionType": "INCLUDED"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "URL generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkedInSearchResponse"
+                },
+                "example": {
+                  "success": true,
+                  "url": "https://www.linkedin.com/sales/search/people?query=(spellCorrectionEnabled:true,keywords:développeur,filters:List((type:CURRENT_COMPANY,values:List((id:urn:li:organization:825160,text:\"Hyundai Motor Company\",selectionType:INCLUDED)))))",
+                  "searchType": "people",
+                  "filters": [
+                    {
+                      "type": "CURRENT_COMPANY",
+                      "values": [
+                        {
+                          "id": "urn:li:organization:825160",
+                          "text": "Hyundai Motor Company",
+                          "selectionType": "INCLUDED"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid search parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/linkedin-sales/parse-url": {
+      "post": {
+        "summary": "Parse LinkedIn Sales Navigator URL",
+        "description": "Parses a LinkedIn Sales Navigator search URL to extract search parameters, filters, and keywords. Supports both people and company search URLs.",
+        "tags": ["LinkedIn Sales Navigator"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "description": "LinkedIn Sales Navigator search URL to parse",
+                    "format": "uri"
+                  }
+                },
+                "required": ["url"]
+              },
+              "example": {
+                "url": "https://www.linkedin.com/sales/search/people?query=(spellCorrectionEnabled:true,keywords:développeur,filters:List((type:CURRENT_COMPANY,values:List((id:urn:li:organization:825160,text:\"Hyundai Motor Company\",selectionType:INCLUDED)))))"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "URL parsed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Whether the parsing was successful"
+                    },
+                    "searchType": {
+                      "type": "string",
+                      "enum": ["people", "company"],
+                      "description": "Type of search (people or company)"
+                    },
+                    "keywords": {
+                      "type": "string",
+                      "description": "Search keywords extracted from URL"
+                    },
+                    "filters": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/LinkedInSearchFilters"
+                      },
+                      "description": "Filters extracted from URL"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Success message"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "searchType": "people",
+                  "keywords": "développeur",
+                  "filters": [
+                    {
+                      "type": "CURRENT_COMPANY",
+                      "values": [
+                        {
+                          "id": "urn:li:organization:825160",
+                          "text": "Hyundai Motor Company",
+                          "selectionType": "INCLUDED"
+                        }
+                      ]
+                    }
+                  ],
+                  "message": "URL parsed successfully"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid URL format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/linkedin-sales/validate-filters": {
+      "post": {
+        "summary": "Validate LinkedIn Sales Navigator Filters",
+        "description": "Validates LinkedIn Sales Navigator search filters for a given search type. Checks filter compatibility and provides warnings for potential issues.",
+        "tags": ["LinkedIn Sales Navigator"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "searchType": {
+                    "type": "string",
+                    "enum": ["people", "company"],
+                    "description": "Type of search (people or company)"
+                  },
+                  "filters": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/LinkedInSearchFilters"
+                    },
+                    "description": "Filters to validate"
+                  }
+                },
+                "required": ["searchType"]
+              },
+              "example": {
+                "searchType": "people",
+                "filters": [
+                  {
+                    "type": "CURRENT_COMPANY",
+                    "values": [
+                      {
+                        "id": "urn:li:organization:825160",
+                        "text": "Hyundai Motor Company",
+                        "selectionType": "INCLUDED"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Filters validated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Whether the validation was successful"
+                    },
+                    "valid": {
+                      "type": "boolean",
+                      "description": "Whether the filters are valid"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Validation errors, if any"
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Validation warnings, if any"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Validation result message"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "valid": true,
+                  "errors": [],
+                  "warnings": [],
+                  "message": "Filters are valid"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid filter format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/linkedin-sales/extract-session": {
+      "post": {
+        "summary": "Extraire le SessionId d'une URL LinkedIn Sales Navigator",
+        "description": "Extrait le sessionId d'une URL LinkedIn Sales Navigator existante. Utile pour récupérer le sessionId d'une session active.",
+        "tags": [
+          "LinkedIn Sales Navigator"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "description": "URL LinkedIn Sales Navigator complète",
+                    "example": "https://www.linkedin.com/sales/search/people?query=(spellCorrectionEnabled:true,filters:List((type:CURRENT_COMPANY,values:List((id:urn:li:organization:825160,text:\"Hyundai Motor Company\",selectionType:INCLUDED)))))&sessionId=oyT4SvXfQXWQEbOH54crEQ%3D%3D"
+                  }
+                },
+                "example": {
+                  "url": "https://www.linkedin.com/sales/search/people?query=(spellCorrectionEnabled:true,filters:List((type:CURRENT_COMPANY,values:List((id:urn:li:organization:825160,text:\"Hyundai Motor Company\",selectionType:INCLUDED)))))&sessionId=oyT4SvXfQXWQEbOH54crEQ%3D%3D"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "SessionId extrait avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "sessionId": {
+                      "type": "string",
+                      "description": "SessionId extrait de l'URL"
+                    },
+                    "decodedSessionId": {
+                      "type": "string",
+                      "description": "SessionId décodé"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "URL invalide ou sessionId non trouvé"
+          },
+          "500": {
+            "description": "Erreur serveur"
+          }
+        }
+      }
+    },
+    "/api/linkedin-sales/generate-url-with-session": {
+      "post": {
+        "summary": "Générer une URL LinkedIn Sales Navigator avec SessionId",
+        "description": "Génère une URL LinkedIn Sales Navigator avec un sessionId spécifique. Permet de créer des URLs qui utilisent une session existante.",
+        "tags": [
+          "LinkedIn Sales Navigator"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "searchType",
+                  "sessionId"
+                ],
+                "properties": {
+                  "searchType": {
+                    "type": "string",
+                    "enum": [
+                      "people",
+                      "company"
+                    ]
+                  },
+                  "keywords": {
+                    "type": "string"
+                  },
+                  "filters": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/LinkedInSearchFilters"
+                    }
+                  },
+                  "sessionId": {
+                    "type": "string",
+                    "description": "SessionId LinkedIn Sales Navigator"
+                  },
+                  "viewAllFilters": {
+                    "type": "boolean",
+                    "default": false
+                  }
+                },
+                "example": {
+                  "searchType": "people",
+                  "keywords": "développeur",
+                  "filters": [
+                    {
+                      "type": "CURRENT_COMPANY",
+                      "values": [
+                        {
+                          "id": "urn:li:organization:825160",
+                          "text": "Hyundai Motor Company",
+                          "selectionType": "INCLUDED"
+                        }
+                      ]
+                    }
+                  ],
+                  "sessionId": "oyT4SvXfQXWQEbOH54crEQ%3D%3D",
+                  "viewAllFilters": false
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "URL générée avec sessionId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "url": {
+                      "type": "string"
+                    },
+                    "searchType": {
+                      "type": "string"
+                    },
+                    "sessionId": {
+                      "type": "string"
+                    },
+                    "filters": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/LinkedInSearchFilters"
+                      }
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Paramètres invalides"
+          },
+          "500": {
+            "description": "Erreur serveur"
+          }
+        }
+      }
+    },
+    "/api/pronto/search-leads": {
+      "post": {
+        "summary": "Recherche avancée de leads avec Pronto (INDISPONIBLE)",
+        "description": "⚠️ ENDPOINT TEMPORAIREMENT INDISPONIBLE - L'API Pronto a modifié ses endpoints. Retourne une erreur 503 avec des alternatives.",
+        "tags": [
+          "Pronto"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "persona": {
+                    "type": "string",
+                    "description": "Persona cible (ex: \"Marketing Director\")"
+                  },
+                  "exactMatch": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Correspondance exacte pour le persona"
+                  },
+                  "jobTitles": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Liste des titres de poste"
+                  },
+                  "companySize": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": ["1-10", "11-50", "51-200", "201-500", "501-1000", "1000+"]
+                    },
+                    "description": "Taille des entreprises"
+                  },
+                  "leadLocation": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Localisation des leads"
+                  },
+                  "companyLocation": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Localisation des entreprises"
+                  },
+                  "industries": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Secteurs d'activité"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "default": 50,
+                    "description": "Nombre maximum de résultats"
+                  },
+                  "offset": {
+                    "type": "integer",
+                    "default": 0,
+                    "description": "Offset pour la pagination"
+                  }
+                }
+              },
+              "example": {
+                "persona": "Marketing Director",
+                "exactMatch": true,
+                "jobTitles": ["Marketing Director", "Head of Marketing"],
+                "companySize": ["1-10", "11-50"],
+                "leadLocation": ["Paris", "New York"],
+                "companyLocation": ["Paris"],
+                "industries": ["Software", "Luxury"],
+                "limit": 50,
+                "offset": 0
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Recherche effectuée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "fullName": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "company": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string"
+                              },
+                              "size": {
+                                "type": "string"
+                              },
+                              "industry": {
+                                "type": "string"
+                              },
+                              "location": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "profilePicture": {
+                            "type": "string"
+                          },
+                          "linkedinUrl": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "phone": {
+                            "type": "string"
+                          },
+                          "location": {
+                            "type": "string"
+                          },
+                          "seniority": {
+                            "type": "string"
+                          },
+                          "department": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "limit": {
+                          "type": "integer"
+                        },
+                        "offset": {
+                          "type": "integer"
+                        },
+                        "hasMore": {
+                          "type": "boolean"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Paramètres de requête invalides"
+          },
+          "401": {
+            "description": "Clé API Pronto invalide"
+          },
+          "429": {
+            "description": "Limite de taux dépassée"
+          },
+          "503": {
+            "description": "Service temporairement indisponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": false },
+                    "error": { "type": "string", "example": "Service de recherche directe temporairement indisponible" },
+                    "message": { "type": "string", "example": "L'API Pronto a modifié ses endpoints. Veuillez utiliser les recherches existantes." },
+                    "alternative": {
+                      "type": "object",
+                      "properties": {
+                        "description": { "type": "string" },
+                        "searches": { "type": "array" },
+                        "total_available_searches": { "type": "integer" }
+                      }
+                    },
+                    "suggestions": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur serveur"
+          }
+        }
+      }
+    },
+    "/api/pronto/search-leads-from-company": {
+      "post": {
+        "summary": "Recherche de leads depuis une entreprise spécifique",
+        "description": "Recherche tous les leads disponibles pour une entreprise donnée en utilisant l'API Pronto",
+        "tags": [
+          "Pronto"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "companyName"
+                ],
+                "properties": {
+                  "companyName": {
+                    "type": "string",
+                    "description": "Nom de l'entreprise"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "default": 50,
+                    "description": "Nombre maximum de résultats"
+                  },
+                  "offset": {
+                    "type": "integer",
+                    "default": 0,
+                    "description": "Offset pour la pagination"
+                  }
+                }
+              },
+              "example": {
+                "companyName": "Google",
+                "limit": 50,
+                "offset": 0
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Recherche effectuée avec succès"
+          },
+          "400": {
+            "description": "Nom d'entreprise requis"
+          },
+          "500": {
+            "description": "Erreur serveur"
+          }
+        }
+      }
+    },
+    "/api/pronto/get-filter-options": {
+      "get": {
+        "summary": "Obtenir les options de filtres disponibles",
+        "description": "Retourne toutes les options de filtres disponibles pour l'API Pronto (tailles d'entreprise, industries, localisations, etc.)",
+        "tags": [
+          "Pronto"
+        ],
+        "responses": {
+          "200": {
+            "description": "Options de filtres récupérées avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "filters": {
+                      "type": "object",
+                      "properties": {
+                        "companySizes": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "industries": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "locations": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "jobTitles": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur serveur"
+          }
+        }
+      }
+    },
+    "/api/pronto/health-check": {
+      "get": {
+        "summary": "Vérification de la santé de l'API Pronto",
+        "description": "Vérifie si l'API Pronto est accessible et si la clé API est valide",
+        "tags": [
+          "Pronto"
+        ],
+        "responses": {
+          "200": {
+            "description": "API Pronto accessible"
+          },
+          "401": {
+            "description": "Clé API invalide"
+          },
+          "500": {
+            "description": "Erreur de connexion"
           }
         }
       }
@@ -347,8 +1309,8 @@
     },
     "/api/pronto/lists": {
       "get": { 
-        "summary": "Retrieve all lists", 
-        "description": "Retrieves a list of all contact and company lists available in the system",
+        "summary": "Récupérer toutes les listes Pronto",
+        "description": "Récupère la liste de toutes les listes d'entreprises créées dans Pronto avec leurs informations de base",
         "tags": ["Pronto"], 
         "responses": { 
           "200": { 
@@ -377,49 +1339,131 @@
           "500": { "description": "Internal server error" }
         } 
       },
-      "post": { 
-        "summary": "Create a new list", 
-        "description": "Creates a new list for organizing contacts and companies",
-        "tags": ["Pronto"], 
-        "requestBody": { 
-          "required": true, 
-          "content": { 
-            "application/json": { 
-              "schema": { 
+      "post": {
+        "summary": "Créer une liste d'entreprises dans Pronto",
+        "description": "Crée une nouvelle liste d'entreprises dans Pronto avec les informations fournies (nom, domaine, pays, LinkedIn URL)",
+        "tags": ["Pronto"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
                 "type": "object",
                 "properties": {
-                  "name": { "type": "string", "description": "Name of the list" },
-                  "description": { "type": "string", "description": "Description of the list" }
+                  "name": {
+                    "type": "string",
+                    "description": "Nom de la liste"
+                  },
+                  "webhook_url": {
+                    "type": "string",
+                    "description": "URL de webhook (optionnel)"
+                  },
+                  "companies": {
+                    "type": "array",
+                    "description": "Liste des entreprises à ajouter",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "description": "Nom de l'entreprise"
+                        },
+                        "country_code": {
+                          "type": "string",
+                          "description": "Code pays (ex: FR, US)"
+                        },
+                        "domain": {
+                          "type": "string",
+                          "description": "Domaine de l'entreprise"
+                        },
+                        "linkedin_url": {
+                          "type": "string",
+                          "description": "URL LinkedIn de l'entreprise"
+                        }
+                      },
+                      "required": ["name"]
+                    }
+                  }
                 },
-                "required": ["name"]
+                "required": ["name", "companies"]
               },
               "example": {
-                "name": "New Tech List",
-                "description": "List of new technology companies"
+                "name": "Ma liste d'entreprises",
+                "webhook_url": "https://webhook.example.com",
+                "companies": [
+                  {
+                    "name": "Pronto",
+                    "country_code": "FR",
+                    "domain": "prontohq.com",
+                    "linkedin_url": "https://www.linkedin.com/company/prontohq"
+                  },
+                  {
+                    "name": "Google",
+                    "country_code": "US",
+                    "domain": "google.com",
+                    "linkedin_url": "https://www.linkedin.com/company/google"
+                  }
+                ]
               }
-            } 
-          } 
-        }, 
-        "responses": { 
-          "201": { 
-            "description": "List created", 
-            "content": { 
-              "application/json": { 
-                "schema": { "$ref": "#/components/schemas/ProntoList" },
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Liste créée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "list": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string", "description": "ID de la liste créée" },
+                        "name": { "type": "string", "description": "Nom de la liste" },
+                        "webhook_url": { "type": "string", "description": "URL de webhook" },
+                        "companies_count": { "type": "integer", "description": "Nombre d'entreprises" },
+                        "companies": { "type": "array", "description": "Liste des entreprises" },
+                        "created_at": { "type": "string", "format": "date-time" },
+                        "pronto_response": { "type": "object", "description": "Réponse complète de Pronto" }
+                      }
+                    },
+                    "message": { "type": "string" }
+                  }
+                },
                 "example": {
-                  "uuid": "123e4567-e89b-12d3-a456-426614174001",
-                  "name": "New Tech List",
-                  "description": "List of new technology companies",
-                  "created_at": "2024-01-01T10:00:00.000Z",
-                  "updated_at": "2024-01-01T10:00:00.000Z"
+                  "success": true,
+                  "list": {
+                    "id": "df62412c-55a6-4fe2-af91-0b74b9e0f454",
+                    "name": "Ma liste d'entreprises",
+                    "webhook_url": "https://webhook.example.com",
+                    "companies_count": 2,
+                    "companies": [
+                      {
+                        "name": "Pronto",
+                        "country_code": "FR",
+                        "domain": "prontohq.com",
+                        "linkedin_url": "https://www.linkedin.com/company/prontohq"
+                      }
+                    ],
+                    "created_at": "2025-08-06T21:06:07.918Z",
+                    "pronto_response": {
+                      "id": "df62412c-55a6-4fe2-af91-0b74b9e0f454",
+                      "linkedin_id": "7358966630862757888",
+                      "type": "companies"
+                    }
+                  },
+                  "message": "Liste \"Ma liste d'entreprises\" créée avec succès avec 2 entreprise(s)"
                 }
-              } 
-            } 
-          }, 
-          "400": { "description": "Invalid input" },
-          "401": { "description": "Unauthorized - Invalid API key" },
-          "500": { "description": "Internal server error" }
-        } 
+              }
+            }
+          },
+          "400": { "description": "Paramètres invalides" },
+          "401": { "description": "Clé API invalide" },
+          "429": { "description": "Limite de taux dépassée" },
+          "500": { "description": "Erreur serveur" }
+        }
       }
     },
     "/api/pronto/lists/{id}": {
@@ -512,56 +1556,93 @@
       }
     },
     "/api/pronto/searches": {
-      "get": { 
-        "summary": "Retrieve all searches", 
-        "description": "Retrieves a list of all saved searches in the system",
-        "tags": ["Pronto"], 
-        "responses": { 
-          "200": { 
-            "description": "List of searches", 
-            "content": { 
-              "application/json": { 
-                "schema": { 
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ProntoSearch"
+      "get": {
+        "summary": "Liste des recherches Pronto disponibles",
+        "description": "Récupère la liste de toutes les recherches Pronto disponibles avec leurs informations de base (nom, nombre de leads, date de création)",
+        "tags": ["Pronto"],
+        "responses": {
+          "200": {
+            "description": "Liste des recherches récupérée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "searches": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string", "description": "ID de la recherche" },
+                          "name": { "type": "string", "description": "Nom de la recherche" },
+                          "leads_count": { "type": "integer", "description": "Nombre de leads" },
+                          "created_at": { "type": "string", "format": "date-time" },
+                          "access_url": { "type": "string", "description": "URL d'accès aux leads" }
+                        }
+                      }
+                    },
+                    "total": { "type": "integer", "description": "Nombre total de recherches" },
+                    "message": { "type": "string" }
                   }
                 },
-                "example": [
-                  {
-                    "uuid": "123e4567-e89b-12d3-a456-426614174000",
-                    "name": "Tech Companies in Paris",
-                    "query": {
-                      "industry": "Technology",
-                      "location": "Paris, France",
-                      "size": "10-50"
-                    },
-                    "created_at": "2024-01-01T10:00:00.000Z",
-                    "updated_at": "2024-01-01T10:00:00.000Z"
-                  }
-                ]
-              } 
-            } 
+                "example": {
+                  "success": true,
+                  "searches": [
+                    {
+                      "id": "39775257-9a6f-433a-ac2c-2cd3a39605a0",
+                      "name": "[Atlas Digital] Resp. Marketing - 1 / 50",
+                      "leads_count": 12,
+                      "created_at": "2025-08-06T14:59:33.284Z",
+                      "access_url": "/api/pronto-workflows/search-leads/39775257-9a6f-433a-ac2c-2cd3a39605a0"
+                    }
+                  ],
+                  "total": 22,
+                  "message": "22 recherches disponibles"
+                }
+              }
+            }
           },
-          "401": { "description": "Unauthorized - Invalid API key" },
-          "500": { "description": "Internal server error" }
-        } 
+          "500": { "description": "Erreur serveur" }
+        }
       }
     },
     "/api/pronto/searches/{id}": {
       "get": { 
-        "summary": "Retrieve search details", 
-        "description": "Retrieves details of a specific saved search by UUID",
+        "summary": "Récupérer les détails d'une recherche Pronto",
+        "description": "Récupère les informations détaillées d'une recherche spécifique dans Pronto incluant les leads/contacts trouvés et les métadonnées",
         "tags": ["Pronto"], 
-        "parameters": [ 
-          { 
-            "name": "id", 
-            "in": "path", 
-            "required": true, 
-            "schema": { "type": "string", "format": "uuid" },
-            "description": "UUID of the search to retrieve"
-          } 
-        ], 
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "ID unique de la recherche",
+            "example": "df62412c-55a6-4fe2-af91-0b74b9e0f454"
+          },
+          {
+            "name": "include_leads",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": true },
+            "description": "Inclure les leads/contacts dans la réponse"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 100, "minimum": 1, "maximum": 1000 },
+            "description": "Nombre maximum de leads à retourner"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 0, "minimum": 0 },
+            "description": "Décalage pour la pagination"
+          }
+        ],
         "responses": { 
           "200": { 
             "description": "Search details", 
@@ -668,6 +1749,282 @@
           "401": { "description": "Unauthorized - Invalid API key" },
           "500": { "description": "Internal server error" }
         } 
+      }
+    },
+    "/api/pronto/status": {
+      "get": {
+        "summary": "Statut des services Pronto",
+        "description": "Vérifie le statut de tous les services Pronto et indique quels endpoints sont disponibles ou indisponibles",
+        "tags": ["Pronto"],
+        "responses": {
+          "200": {
+            "description": "Statut des services récupéré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "status": {
+                      "type": "object",
+                      "properties": {
+                        "timestamp": { "type": "string", "format": "date-time" },
+                        "services": {
+                          "type": "object",
+                          "properties": {
+                            "authentication": {
+                              "type": "object",
+                              "properties": {
+                                "available": { "type": "boolean" },
+                                "message": { "type": "string" }
+                              }
+                            },
+                            "searches": {
+                              "type": "object",
+                              "properties": {
+                                "available": { "type": "boolean" },
+                                "message": { "type": "string" }
+                              }
+                            },
+                            "lists_creation": {
+                              "type": "object",
+                              "properties": {
+                                "available": { "type": "boolean" },
+                                "message": { "type": "string" }
+                              }
+                            },
+                            "leads_extraction": {
+                              "type": "object",
+                              "properties": {
+                                "available": { "type": "boolean" },
+                                "message": { "type": "string" }
+                              }
+                            }
+                          }
+                        },
+                        "available_endpoints": {
+                          "type": "array",
+                          "items": { "type": "string" }
+                        },
+                        "unavailable_endpoints": {
+                          "type": "array",
+                          "items": { "type": "string" }
+                        },
+                        "alternatives": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "description": { "type": "string" },
+                              "endpoint": { "type": "string" },
+                              "available": { "type": "boolean" }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "message": { "type": "string" }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "status": {
+                    "timestamp": "2025-08-06T21:08:13.856Z",
+                    "services": {
+                      "authentication": {
+                        "available": true,
+                        "message": "Authentification réussie"
+                      },
+                      "searches": {
+                        "available": true,
+                        "message": "Endpoint /searches disponible"
+                      },
+                      "lists_creation": {
+                        "available": true,
+                        "message": "Endpoint /lists disponible"
+                      },
+                      "leads_extraction": {
+                        "available": false,
+                        "message": "Endpoints d'extraction directe indisponibles"
+                      }
+                    },
+                    "available_endpoints": [
+                      "GET /api/pronto/searches",
+                      "POST /api/pronto/lists"
+                    ],
+                    "unavailable_endpoints": [
+                      "POST /api/pronto/search-leads",
+                      "POST /api/pronto/leads/extract"
+                    ],
+                    "alternatives": [
+                      {
+                        "description": "Consulter les recherches existantes",
+                        "endpoint": "GET /api/pronto/searches",
+                        "available": true
+                      }
+                    ]
+                  },
+                  "message": "Statut des services Pronto récupéré"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur lors de la vérification du statut"
+          }
+        }
+      }
+    },
+    "/api/pronto/workflow/global-results": {
+      "get": {
+        "summary": "Workflow global - Résultats combinés de toutes les recherches Pronto",
+        "description": "Workflow automatique qui : 1) Récupère tous les IDs de recherches depuis /api/pronto/searches, 2) Pour chaque ID, récupère les détails depuis /api/pronto/searches/{id}, 3) Combine tous les résultats en un seul tableau, 4) Applique un filtre optionnel par nom d'entreprise, 5) Retourne la structure complète avec leads et companies",
+        "tags": ["Pronto Workflow"],
+        "parameters": [
+          {
+            "name": "company_filter",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Filtre par nom d'entreprise. Peut contenir plusieurs noms séparés par des virgules. La recherche est insensible à la casse et utilise une correspondance partielle.",
+            "example": "Google,Microsoft,Apple"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 1000, "minimum": 1, "maximum": 10000 },
+            "description": "Nombre maximum de leads à retourner au total"
+          },
+          {
+            "name": "title_filter",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Filtre par titre/poste du lead. Peut contenir plusieurs titres séparés par des virgules.",
+            "example": "CEO,CTO,Manager"
+          },
+          {
+            "name": "lead_location_filter",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Filtre par localisation du lead. Peut contenir plusieurs localisations séparées par des virgules.",
+            "example": "Paris,London,New York"
+          },
+          {
+            "name": "employee_range_filter",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Filtre par taille d'entreprise (employee_range). Peut contenir plusieurs tailles séparées par des virgules.",
+            "example": "1-10,11-50,51-200"
+          },
+          {
+            "name": "company_location_filter",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Filtre par localisation de l'entreprise. Peut contenir plusieurs localisations séparées par des virgules.",
+            "example": "Paris,London,Berlin"
+          },
+          {
+            "name": "industry_filter",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Filtre par secteur d'activité de l'entreprise. Peut contenir plusieurs secteurs séparés par des virgules.",
+            "example": "Technology,Finance,Healthcare"
+          },
+          {
+            "name": "include_search_details",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": false },
+            "description": "Inclure les détails des recherches dans la réponse"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Résultats globaux récupérés avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "total_searches": { "type": "integer", "description": "Nombre total de recherches traitées" },
+                    "total_leads": { "type": "integer", "description": "Nombre total de leads trouvés" },
+                    "filtered_leads": { "type": "integer", "description": "Nombre de leads après filtrage" },
+                    "unique_companies": { "type": "integer", "description": "Nombre d'entreprises uniques" },
+                    "applied_filters": {
+                      "type": "object",
+                      "properties": {
+                        "company_names": {
+                          "type": "array",
+                          "items": { "type": "string" },
+                          "description": "Noms d'entreprises utilisés pour le filtrage"
+                        }
+                      }
+                    },
+                    "leads": {
+                      "type": "array",
+                      "description": "Tous les leads combinés avec structure Pronto",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "search_id": { "type": "string", "description": "ID de la recherche d'origine" },
+                          "search_name": { "type": "string", "description": "Nom de la recherche d'origine" },
+                          "lead": { "type": "object", "description": "Données du lead (structure Pronto complète)" },
+                          "company": { "type": "object", "description": "Données de l'entreprise (structure Pronto complète)" }
+                        }
+                      }
+                    },
+                    "processing_time": { "type": "number", "description": "Temps de traitement en secondes" },
+                    "message": { "type": "string" }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "total_searches": 5,
+                  "total_leads": 1250,
+                  "filtered_leads": 45,
+                  "unique_companies": 12,
+                  "applied_filters": {
+                    "company_names": ["Google", "Microsoft"],
+                    "titles": ["CEO", "CTO"],
+                    "lead_locations": ["Paris"],
+                    "employee_ranges": ["51-200"],
+                    "company_locations": ["Paris", "London"],
+                    "industries": ["Technology"]
+                  },
+                  "leads": [
+                    {
+                      "search_id": "search-123",
+                      "search_name": "Tech CEOs Paris",
+                      "lead": {
+                        "first_name": "Jean",
+                        "last_name": "Dupont",
+                        "title": "CEO",
+                        "most_probable_email": "jean@google.com"
+                      },
+                      "company": {
+                        "name": "Google France",
+                        "industry": "Technology",
+                        "website": "google.com"
+                      }
+                    }
+                  ],
+                  "processing_time": 12.5,
+                  "message": "45 leads trouvés après filtrage sur 1250 leads totaux"
+                }
+              }
+            }
+          },
+          "400": { "description": "Paramètres invalides" },
+          "401": { "description": "Clé API invalide" },
+          "500": { "description": "Erreur serveur" }
+        }
       }
     },
     "/api/pronto/accounts/profiles": {
@@ -885,8 +2242,8 @@
     },
     "/api/pronto/leads/extract": {
       "post": { 
-        "summary": "Extract lead search results", 
-        "description": "Extracts contact/lead data based on search criteria and filters",
+        "summary": "Extraction de leads avec filtres avancés (INDISPONIBLE)",
+        "description": "⚠️ ENDPOINT TEMPORAIREMENT INDISPONIBLE - L'API Pronto a modifié ses endpoints. Retourne une erreur 503 avec des alternatives.",
         "tags": ["Pronto"], 
         "requestBody": { 
           "required": true, 
@@ -4963,6 +6320,120 @@
           "linkedin_url": { "type": "string", "description": "LinkedIn URL" }
         },
         "required": ["uuid", "first_name", "last_name"]
+      },
+      "LinkedInFilterType": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Filter type identifier"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable filter name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Filter description"
+          }
+        },
+        "required": ["type", "name"]
+      },
+      "LinkedInFilterValue": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the filter value (e.g., URN LinkedIn for companies)"
+          },
+          "text": {
+            "type": "string",
+            "description": "Display text for the filter"
+          },
+          "selectionType": {
+            "type": "string",
+            "enum": ["INCLUDED", "EXCLUDED"],
+            "default": "INCLUDED",
+            "description": "Whether to include or exclude this value"
+          }
+        },
+        "required": ["id", "text"]
+      },
+      "LinkedInSearchFilters": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Type of LinkedIn Sales Navigator filter"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LinkedInFilterValue"
+            },
+            "description": "Filter values to apply"
+          }
+        },
+        "required": ["type", "values"]
+      },
+      "LinkedInSearchRequest": {
+        "type": "object",
+        "required": ["searchType"],
+        "properties": {
+          "searchType": {
+            "type": "string",
+            "enum": ["people", "company"],
+            "description": "Type of search - people for prospects, company for companies"
+          },
+          "keywords": {
+            "type": "string",
+            "description": "Generic search keywords"
+          },
+          "filters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LinkedInSearchFilters"
+            },
+            "description": "List of filters to apply"
+          },
+          "sessionId": {
+            "type": "string",
+            "description": "LinkedIn session ID (optional)"
+          },
+          "viewAllFilters": {
+            "type": "boolean",
+            "default": false,
+            "description": "Show all available filters"
+          }
+        }
+      },
+      "LinkedInSearchResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "url": {
+            "type": "string",
+            "description": "Complete LinkedIn Sales Navigator search URL"
+          },
+          "searchType": {
+            "type": "string",
+            "enum": ["people", "company"]
+          },
+          "filters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LinkedInSearchFilters"
+            }
+          },
+          "message": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          }
+        }
       }
     }
   },
@@ -4986,6 +6457,10 @@
     {
       "name": "Pronto Workflows",
       "description": "Composite workflows that combine multiple Pronto API calls for complex operations"
+    },
+    {
+      "name": "LinkedIn Sales Navigator",
+      "description": "LinkedIn Sales Navigator API endpoints for URL generation, parsing, and filter management"
     }
   ],
   "x-endpoint-descriptions": [
