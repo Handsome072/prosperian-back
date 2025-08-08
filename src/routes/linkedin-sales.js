@@ -787,30 +787,34 @@ router.post('/generate-url', (req, res) => {
 
     // Construction de l'URL de base
     const baseUrl = `https://www.linkedin.com/sales/search/${searchType}`;
-    
-    // Construction du paramètre query au format LinkedIn
-    let queryString = '(spellCorrectionEnabled:true';
-    
+
+    // Construction du paramètre query au format LinkedIn Sales Navigator exact
+    // Générer un ID aléatoire pour recentSearchParam (10 chiffres comme dans l'exemple)
+    const searchId = Math.floor(1000000000 + Math.random() * 9000000000);
+
+    let queryString = `(spellCorrectionEnabled:true,recentSearchParam:(id:${searchId},doLogHistory:true)`;
+
     // Ajout des filtres si présents
     if (filters && filters.length > 0) {
-      queryString += ',filters:List((';
-      
+      queryString += ',filters:List(';
+
       const filtersList = filters.map(filter => {
-        const valuesList = filter.values.map(value => 
-          `(id:${value.id},text:"${value.text}",selectionType:${value.selectionType || 'INCLUDED'})`
-        ).join(',');
-        
-        return `type:${filter.type},values:List((${valuesList}))`;
-      }).join(',');
-      
-      queryString += filtersList + '))';
+        const valuesList = filter.values.map(value => {
+          // Format LinkedIn : guillemets simples comme dans l'URL validée
+          return `(text:"${value.text}",selectionType:${value.selectionType || 'INCLUDED'})`;
+        }).join(',');
+
+        return `(type:${filter.type},values:List(${valuesList}))`;
+      }).join('),(');
+
+      queryString += filtersList + ')';
     }
 
-    // Ajout des mots-clés si présents
+    // Ajout des mots-clés si présents (avec guillemets simples)
     if (keywords) {
-      queryString += `,keywords:${keywords}`;
+      queryString += `,keywords:"${keywords}"`;
     }
-    
+
     queryString += ')';
     
     // Encodage du paramètre query
@@ -818,21 +822,27 @@ router.post('/generate-url', (req, res) => {
     
     // Construction de l'URL finale
     let finalUrl = `${baseUrl}?query=${encodedQuery}`;
-    
+
     // Ajout des paramètres optionnels
     if (sessionId) {
       finalUrl += `&sessionId=${encodeURIComponent(sessionId)}`;
     }
-    
+
     if (viewAllFilters) {
       finalUrl += '&viewAllFilters=true';
     }
+
+    // Log pour debug
+    console.log('🔗 URL LinkedIn Sales Navigator générée:');
+    console.log('📊 Query string décodé:', queryString);
+    console.log('🌐 URL finale:', finalUrl);
 
     res.json({
       success: true,
       url: finalUrl,
       searchType,
       filters,
+      queryString: queryString, // Ajout pour debug
       message: `URL de recherche LinkedIn Sales Navigator générée pour ${searchType === 'people' ? 'les prospects' : 'les entreprises'}`
     });
 
@@ -1389,30 +1399,32 @@ router.post('/generate-url-with-session', (req, res) => {
 
     // Construction de l'URL de base
     const baseUrl = `https://www.linkedin.com/sales/search/${searchType}`;
-    
-    // Construction du paramètre query au format LinkedIn
-    let queryString = '(spellCorrectionEnabled:true';
-    
+
+    // Construction du paramètre query au format LinkedIn Sales Navigator exact
+    let queryString = '(recentSearchParam:(doLogHistory:true)';
+
     // Ajout des filtres si présents
     if (filters && filters.length > 0) {
-      queryString += ',filters:List((';
-      
+      queryString += ',filters:List(';
+
       const filtersList = filters.map(filter => {
-        const valuesList = filter.values.map(value => 
-          `(id:${value.id},text:"${value.text}",selectionType:${value.selectionType || 'INCLUDED'})`
-        ).join(',');
-        
-        return `type:${filter.type},values:List((${valuesList}))`;
-      }).join(',');
-      
-      queryString += filtersList + '))';
+        const valuesList = filter.values.map(value => {
+          // Échapper les caractères spéciaux dans le texte pour éviter les erreurs
+          const escapedText = value.text.replace(/"/g, '\\"');
+          return `(text:"${escapedText}",selectionType:${value.selectionType || 'INCLUDED'},parent:())`;
+        }).join(',');
+
+        return `(type:${filter.type},values:List(${valuesList}))`;
+      }).join('),(');
+
+      queryString += filtersList + ')';
     }
 
     // Ajout des mots-clés si présents
     if (keywords) {
-      queryString += `,keywords:${keywords}`;
+      queryString += `,keywords:"${keywords}"`;
     }
-    
+
     queryString += ')';
     
     // Encodage du paramètre query

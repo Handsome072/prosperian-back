@@ -891,6 +891,156 @@ router.get('/lists', async (req, res) => {
 
 /**
  * @swagger
+ * /api/pronto/lists/{id}:
+ *   get:
+ *     summary: Récupère les détails d'une liste Pronto spécifique avec ses entreprises
+ *     tags: [Pronto]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la liste Pronto
+ *     responses:
+ *       200:
+ *         description: Détails de la liste récupérés avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 list:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     type:
+ *                       type: string
+ *                     companies_count:
+ *                       type: integer
+ *                     companies:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           company_name:
+ *                             type: string
+ *                           linkedin_url:
+ *                             type: string
+ *                           linkedin_id:
+ *                             type: string
+ *                           company_website:
+ *                             type: string
+ *                     created_at:
+ *                       type: string
+ *                     updated_at:
+ *                       type: string
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: ID de liste manquant ou invalide
+ *       404:
+ *         description: Liste non trouvée
+ *       401:
+ *         description: Clé API invalide
+ *       500:
+ *         description: Erreur serveur
+ */
+router.get('/lists/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: 'ID de liste manquant',
+        message: 'L\'ID de la liste est requis'
+      });
+    }
+
+    console.log(`📋 Récupération des détails de la liste Pronto: ${id}`);
+
+    // Appel à l'API Pronto pour récupérer les détails de la liste
+    const response = await prontoClient.get(`/lists/${id}`);
+
+    console.log('✅ Réponse de l\'API Pronto reçue');
+    console.log('📊 Données brutes:', JSON.stringify(response.data, null, 2));
+
+    const listData = response.data;
+
+    // Formatage de la réponse
+    const formattedList = {
+      id: listData.id,
+      name: listData.name || 'Liste sans nom',
+      type: listData.type || 'unknown',
+      companies_count: listData.companies ? listData.companies.length : 0,
+      linkedin_id: listData.linkedin_id || null,
+      created_at: listData.created_at,
+      updated_at: listData.updated_at,
+      companies: listData.companies || []
+    };
+
+    console.log(`✅ Liste formatée: ${formattedList.name} avec ${formattedList.companies_count} entreprise(s)`);
+
+    res.json({
+      success: true,
+      list: formattedList,
+      message: `Détails de la liste "${formattedList.name}" récupérés avec succès`,
+      pronto_response: response.data // Réponse brute pour debug
+    });
+
+  } catch (error) {
+    console.error('❌ Erreur lors de la récupération des détails de la liste:', error.response?.data || error.message);
+
+    // Gestion des erreurs spécifiques
+    if (error.response?.status === 401) {
+      return res.status(401).json({
+        success: false,
+        error: "Clé API Pronto invalide ou expirée",
+        message: "Vérifiez votre clé API Pronto"
+      });
+    }
+
+    if (error.response?.status === 403) {
+      return res.status(403).json({
+        success: false,
+        error: "Accès refusé",
+        message: "Vous n'avez pas les permissions pour accéder à cette liste"
+      });
+    }
+
+    if (error.response?.status === 404) {
+      return res.status(404).json({
+        success: false,
+        error: "Liste non trouvée",
+        message: `La liste avec l'ID "${req.params.id}" n'existe pas`
+      });
+    }
+
+    if (error.response?.status === 429) {
+      return res.status(429).json({
+        success: false,
+        error: "Limite de taux dépassée",
+        message: "Trop de requêtes. Veuillez réessayer plus tard."
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: "Erreur lors de la récupération des détails de la liste",
+      details: error.message,
+      pronto_error: error.response?.data || null
+    });
+  }
+});
+
+/**
+ * @swagger
  * /api/pronto/searches/{id}:
  *   get:
  *     summary: Récupérer les détails d'une recherche Pronto
@@ -2140,4 +2290,208 @@ router.get('/health-check', async (req, res) => {
   }
 });
 
-module.exports = router; 
+/**
+ * @swagger
+ * /api/pronto/leads:
+ *   post:
+ *     summary: Créer une nouvelle recherche de leads Pronto
+ *     tags: [Pronto]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - search_url
+ *             properties:
+ *               search_url:
+ *                 type: string
+ *                 description: URL de recherche LinkedIn Sales Navigator
+ *                 example: "https://www.linkedin.com/sales/search/people?query=(firstName%3AJohn%20AND%20lastName%3ASmith)"
+ *               webhook_url:
+ *                 type: string
+ *                 description: URL de webhook pour recevoir les résultats
+ *                 example: "https://myapp.com/webhook/pronto"
+ *               name:
+ *                 type: string
+ *                 description: Nom de la recherche
+ *                 example: "Recherche développeurs Paris"
+ *               streaming:
+ *                 type: boolean
+ *                 description: Activer le streaming des résultats
+ *                 default: true
+ *               custom:
+ *                 type: object
+ *                 description: Données personnalisées
+ *                 properties:
+ *                   hubspot_id:
+ *                     type: string
+ *                     description: ID HubSpot associé
+ *                     example: "134567"
+ *               limit:
+ *                 type: integer
+ *                 description: Limite du nombre de leads à extraire
+ *                 default: 100
+ *                 minimum: 1
+ *                 maximum: 1000
+ *     responses:
+ *       201:
+ *         description: Recherche de leads créée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 search_id:
+ *                   type: string
+ *                   description: ID unique de la recherche créée
+ *                 status:
+ *                   type: string
+ *                   description: Statut de la recherche
+ *                 message:
+ *                   type: string
+ *                 pronto_response:
+ *                   type: object
+ *                   description: Réponse brute de l'API Pronto
+ *       400:
+ *         description: Données de requête invalides
+ *       401:
+ *         description: Clé API invalide
+ *       500:
+ *         description: Erreur serveur
+ */
+router.post('/leads', async (req, res) => {
+  try {
+    const { search_url, webhook_url, name, streaming = true, custom, limit = 100 } = req.body;
+
+    // Validation des données requises
+    if (!search_url) {
+      return res.status(400).json({
+        success: false,
+        error: 'URL de recherche manquante',
+        message: 'Le champ search_url est requis'
+      });
+    }
+
+    // Validation de l'URL
+    try {
+      new URL(search_url);
+    } catch (urlError) {
+      return res.status(400).json({
+        success: false,
+        error: 'URL de recherche invalide',
+        message: 'L\'URL de recherche fournie n\'est pas valide'
+      });
+    }
+
+    // Validation de la limite
+    if (limit < 1 || limit > 1000) {
+      return res.status(400).json({
+        success: false,
+        error: 'Limite invalide',
+        message: 'La limite doit être entre 1 et 1000'
+      });
+    }
+
+    console.log('🚀 Création d\'une nouvelle recherche de leads Pronto...');
+    console.log('📊 Paramètres:', {
+      search_url,
+      webhook_url,
+      name,
+      streaming,
+      custom,
+      limit
+    });
+
+    // Construire le payload pour l'API Pronto
+    const payload = {
+      search_url,
+      streaming,
+      limit
+    };
+
+    // Ajouter les champs optionnels s'ils sont fournis
+    if (webhook_url) payload.webhook_url = webhook_url;
+    if (name) payload.name = name;
+    if (custom) payload.custom = custom;
+
+    // Appel à l'API Pronto
+    const response = await prontoClient.post('/leads', payload);
+
+    console.log('✅ Réponse de l\'API Pronto reçue');
+    console.log('📊 Données brutes:', JSON.stringify(response.data, null, 2));
+
+    // Formatage de la réponse
+    const searchData = response.data;
+
+    const formattedResponse = {
+      search_id: searchData.id || searchData.search_id,
+      status: searchData.status || 'created',
+      name: searchData.name || name,
+      search_url: searchData.search_url || search_url,
+      webhook_url: searchData.webhook_url || webhook_url,
+      streaming: searchData.streaming !== undefined ? searchData.streaming : streaming,
+      limit: searchData.limit || limit,
+      created_at: searchData.created_at || new Date().toISOString(),
+      custom: searchData.custom || custom
+    };
+
+    console.log(`✅ Recherche de leads créée avec succès: ${formattedResponse.search_id}`);
+
+    res.status(201).json({
+      success: true,
+      search: formattedResponse,
+      message: `Recherche de leads "${formattedResponse.name || 'Sans nom'}" créée avec succès`,
+      pronto_response: response.data // Réponse brute pour debug
+    });
+
+  } catch (error) {
+    console.error('❌ Erreur lors de la création de la recherche de leads:', error.response?.data || error.message);
+
+    // Gestion des erreurs spécifiques
+    if (error.response?.status === 401) {
+      return res.status(401).json({
+        success: false,
+        error: "Clé API Pronto invalide ou expirée",
+        message: "Vérifiez votre clé API Pronto"
+      });
+    }
+
+    if (error.response?.status === 403) {
+      return res.status(403).json({
+        success: false,
+        error: "Accès refusé",
+        message: "Vous n'avez pas les permissions pour créer des recherches de leads"
+      });
+    }
+
+    if (error.response?.status === 429) {
+      return res.status(429).json({
+        success: false,
+        error: "Limite de taux dépassée",
+        message: "Trop de requêtes. Veuillez réessayer plus tard."
+      });
+    }
+
+    if (error.response?.status === 400) {
+      return res.status(400).json({
+        success: false,
+        error: "Données de requête invalides",
+        message: error.response?.data?.message || "Vérifiez les paramètres de la requête",
+        details: error.response?.data
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: "Erreur lors de la création de la recherche de leads",
+      details: error.message,
+      pronto_error: error.response?.data || null
+    });
+  }
+});
+
+module.exports = router;
