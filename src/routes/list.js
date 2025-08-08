@@ -496,4 +496,135 @@ router.get('/:id/first-column', async (req, res) => {
   }
 });
 
-module.exports = router; 
+// POST create leads list from Pronto results
+router.post('/create-leads-from-pronto', async (req, res) => {
+  try {
+    const { nom, leads } = req.body;
+
+    if (!nom || !leads || !Array.isArray(leads)) {
+      return res.status(400).json({
+        error: 'nom et leads (array) sont requis'
+      });
+    }
+
+    if (leads.length === 0) {
+      return res.status(400).json({
+        error: 'Aucun lead fourni'
+      });
+    }
+
+    console.log(`📋 Création d'une liste de leads: ${nom} avec ${leads.length} leads`);
+
+    // Créer le contenu CSV pour les leads
+    const csvHeaders = [
+      'Prénom',
+      'Nom',
+      'Nom complet',
+      'Titre',
+      'Entreprise',
+      'Localisation',
+      'URL LinkedIn',
+      'URL Photo',
+      'Email',
+      'Téléphone',
+      'Secteur',
+      'Taille entreprise',
+      'Description',
+      'Mots-clés'
+    ];
+
+    const csvRows = leads.map(lead => {
+      // Extraire les informations du lead (structure flexible)
+      const firstName = lead.first_name || lead.firstName || '';
+      const lastName = lead.last_name || lead.lastName || '';
+      const fullName = lead.full_name || lead.fullName || `${firstName} ${lastName}`.trim();
+      const title = lead.title || lead.current_title || lead.job_title || '';
+      const company = lead.company || lead.current_company || lead.company_name || '';
+      const location = lead.location || lead.current_location || '';
+      const linkedinUrl = lead.linkedin_url || lead.profile_url || '';
+      const photoUrl = lead.photo_url || lead.profile_image || lead.image_url || '';
+      const email = lead.email || '';
+      const phone = lead.phone || lead.telephone || '';
+      const industry = lead.industry || lead.company_industry || '';
+      const companySize = lead.company_size || lead.company_headcount || '';
+      const description = lead.description || lead.summary || '';
+      const keywords = lead.keywords || lead.tags ? (Array.isArray(lead.tags) ? lead.tags.join(', ') : lead.tags) : '';
+
+      return [
+        `"${firstName}"`,
+        `"${lastName}"`,
+        `"${fullName}"`,
+        `"${title}"`,
+        `"${company}"`,
+        `"${location}"`,
+        `"${linkedinUrl}"`,
+        `"${photoUrl}"`,
+        `"${email}"`,
+        `"${phone}"`,
+        `"${industry}"`,
+        `"${companySize}"`,
+        `"${description}"`,
+        `"${keywords}"`
+      ].join(',');
+    });
+
+    const csvContent = [csvHeaders.join(','), ...csvRows].join('\n');
+
+    // Générer un nom de fichier unique
+    const timestamp = Date.now();
+    const randomDigits = Math.floor(10000000 + Math.random() * 90000000);
+    const filename = `leads_${timestamp}_${randomDigits}.csv`;
+    const filePath = path.join(__dirname, '../../public/leads', filename);
+
+    // Créer le dossier leads s'il n'existe pas
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+      console.log('📁 Dossier leads créé:', dir);
+    }
+
+    // Écrire le fichier CSV
+    fs.writeFileSync(filePath, csvContent, 'utf8');
+    console.log('💾 Fichier CSV créé:', filePath);
+
+    // Créer l'enregistrement dans la base de données
+    const dbInput = {
+      type: 'Leads',
+      nom,
+      elements: leads.length,
+      path: `/public/leads/${filename}`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    const { data, error } = await supabase
+      .from('liste')
+      .insert(dbInput)
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('❌ Erreur lors de l\'insertion de la liste de leads:', error);
+      // Supprimer le fichier si l'insertion échoue
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      return res.status(400).json({ error: error.message });
+    }
+
+    console.log('✅ Liste de leads créée avec succès:', data);
+
+    res.status(201).json({
+      ...data,
+      filePath: dbInput.path,
+      elements: leads.length,
+      message: `Liste de leads "${nom}" créée avec succès`
+    });
+
+  } catch (err) {
+    console.error('❌ Erreur lors de la création de la liste de leads:', err);
+    res.status(500).json({ error: 'Erreur lors de la création de la liste de leads' });
+  }
+});
+
+module.exports = router;
