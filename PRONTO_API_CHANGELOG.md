@@ -158,4 +158,4 @@
 
 - **Vérification du statut** : `GET /api/pronto/status`
 - **Diagnostic complet** : `GET /api/pronto-workflows/diagnostic`
-- **Documentation** : `http://localhost:4000/api-docs`
+- **Documentation** : `http://69.62.105.91:4000/api-docs`

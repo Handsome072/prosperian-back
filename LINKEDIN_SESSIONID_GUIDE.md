@@ -37,7 +37,7 @@ https://www.linkedin.com/sales/search/people?query=(spellCorrectionEnabled:true,
 ### **Méthode 3 : Via notre API d'Extraction**
 
 ```bash
-curl -X POST 'http://localhost:4000/api/linkedin-sales/extract-session' \
+curl -X POST 'http://69.62.105.91:4000/api/linkedin-sales/extract-session' \
   -H 'Content-Type: application/json' \
   -d '{
     "url": "https://www.linkedin.com/sales/search/people?query=(spellCorrectionEnabled:true,filters:List((type:CURRENT_COMPANY,values:List((id:urn:li:organization:825160,text:\"Hyundai Motor Company\",selectionType:INCLUDED)))))&sessionId=oyT4SvXfQXWQEbOH54crEQ%3D%3D"
@@ -49,7 +49,7 @@ curl -X POST 'http://localhost:4000/api/linkedin-sales/extract-session' \
 ### **1. Extraction du SessionId**
 
 ```javascript
-const response = await axios.post('http://localhost:4000/api/linkedin-sales/extract-session', {
+const response = await axios.post('http://69.62.105.91:4000/api/linkedin-sales/extract-session', {
   url: 'https://www.linkedin.com/sales/search/people?query=...&sessionId=oyT4SvXfQXWQEbOH54crEQ%3D%3D'
 });
 
@@ -60,7 +60,7 @@ console.log('SessionId extrait:', response.data.sessionId);
 ### **2. Génération d'URL avec SessionId**
 
 ```javascript
-const response = await axios.post('http://localhost:4000/api/linkedin-sales/generate-url-with-session', {
+const response = await axios.post('http://69.62.105.91:4000/api/linkedin-sales/generate-url-with-session', {
   searchType: 'people',
   keywords: 'développeur',
   filters: [

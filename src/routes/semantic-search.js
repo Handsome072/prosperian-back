@@ -172,7 +172,7 @@ router.post('/search', async (req, res) => {
     }
 
     // 2. Effectuer la recherche avec les codes NAF trouvés
-    const API_URL = "http://localhost:4000/api/search?section_activite_principale=A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U";
+    const API_URL = "http://69.62.105.91:4000/api/search?section_activite_principale=A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U";
     let searchUrl = `${API_URL}&page=${page}&per_page=${limit}`;
     
     // Ajouter les codes NAF à la recherche

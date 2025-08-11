@@ -168,7 +168,7 @@ APIFY_TOKEN=votre_vrai_token_ici
 
 **Solutions :**
 1. Vérifiez que le serveur backend fonctionne (port 4000)
-2. Testez l'API directement : `curl "http://localhost:4000/api/google-places/search?activity=restaurant&location=Paris&limit=3"`
+2. Testez l'API directement : `curl "http://69.62.105.91:4000/api/google-places/search?activity=restaurant&location=Paris&limit=3"`
 3. Vérifiez les logs du serveur backend
 
 ### Problème : "Request failed with status code 404" (Mode Production)

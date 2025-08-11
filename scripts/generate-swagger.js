@@ -28,7 +28,7 @@ function parseSwaggerComments(comments) {
     },
     servers: [
       {
-        url: 'http://localhost:4000',
+        url: 'http://69.62.105.91:4000',
         description: 'Serveur de développement'
       }
     ],

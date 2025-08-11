@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const BASE_URL = 'http://localhost:4000/api/linkedin-sales';
+const BASE_URL = 'http://69.62.105.91:4000/api/linkedin-sales';
 
 // Fonction utilitaire pour tester les endpoints
 async function testEndpoint(name, method, url, data = null) {

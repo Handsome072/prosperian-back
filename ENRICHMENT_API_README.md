@@ -43,7 +43,7 @@ CREATE TABLE public.lead_enrich (
 
 ### Base URL
 ```
-http://localhost:4000/api/enrichment
+http://69.62.105.91:4000/api/enrichment
 ```
 
 ## 📝 Gestion des Enrichments
@@ -312,7 +312,7 @@ Authorization: Bearer <your-jwt-token>
 
 La documentation complète est disponible dans Swagger UI :
 ```
-http://localhost:4000/api-docs
+http://69.62.105.91:4000/api-docs
 ```
 
 Sections disponibles :
@@ -364,7 +364,7 @@ Sections disponibles :
 ### Exemple 1 : Créer une campagne d'enrichment LinkedIn
 
 ```bash
-curl -X POST http://localhost:4000/api/enrichment \
+curl -X POST http://69.62.105.91:4000/api/enrichment \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -377,7 +377,7 @@ curl -X POST http://localhost:4000/api/enrichment \
 ### Exemple 2 : Ajouter des leads en lot
 
 ```bash
-curl -X POST http://localhost:4000/api/enrichment/<enrichment-id>/leads/bulk \
+curl -X POST http://69.62.105.91:4000/api/enrichment/<enrichment-id>/leads/bulk \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -401,7 +401,7 @@ curl -X POST http://localhost:4000/api/enrichment/<enrichment-id>/leads/bulk \
 ### Exemple 3 : Suivre le statut d'un enrichment
 
 ```bash
-curl -X GET http://localhost:4000/api/enrichment/<enrichment-id> \
+curl -X GET http://69.62.105.91:4000/api/enrichment/<enrichment-id> \
   -H "Authorization: Bearer <token>"
 ```
 

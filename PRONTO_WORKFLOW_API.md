@@ -194,55 +194,55 @@ GET /api/pronto/workflow/global-results
 ### 1. Récupérer tous les leads (aucun filtre)
 
 ```bash
-curl -X GET "http://localhost:4000/api/pronto/workflow/global-results?limit=100"
+curl -X GET "http://69.62.105.91:4000/api/pronto/workflow/global-results?limit=100"
 ```
 
 ### 2. Filtres vides explicites (même résultat que ci-dessus)
 
 ```bash
-curl -X GET "http://localhost:4000/api/pronto/workflow/global-results?company_filter=&title_filter=&limit=100"
+curl -X GET "http://69.62.105.91:4000/api/pronto/workflow/global-results?company_filter=&title_filter=&limit=100"
 ```
 
 ### 2. Filtrer par entreprises spécifiques
 
 ```bash
-curl -X GET "http://localhost:4000/api/pronto/workflow/global-results?company_filter=Google,Microsoft,Apple&limit=50"
+curl -X GET "http://69.62.105.91:4000/api/pronto/workflow/global-results?company_filter=Google,Microsoft,Apple&limit=50"
 ```
 
 ### 3. Filtrer par titres/postes
 
 ```bash
-curl -X GET "http://localhost:4000/api/pronto/workflow/global-results?title_filter=CEO,CTO,VP&limit=30"
+curl -X GET "http://69.62.105.91:4000/api/pronto/workflow/global-results?title_filter=CEO,CTO,VP&limit=30"
 ```
 
 ### 4. Filtrage par localisation
 
 ```bash
-curl -X GET "http://localhost:4000/api/pronto/workflow/global-results?lead_location_filter=Paris,London&company_location_filter=France,UK&limit=40"
+curl -X GET "http://69.62.105.91:4000/api/pronto/workflow/global-results?lead_location_filter=Paris,London&company_location_filter=France,UK&limit=40"
 ```
 
 ### 5. Filtrage par secteur et taille d'entreprise
 
 ```bash
-curl -X GET "http://localhost:4000/api/pronto/workflow/global-results?industry_filter=Technology,Finance&employee_range_filter=51-200,201-500&limit=60"
+curl -X GET "http://69.62.105.91:4000/api/pronto/workflow/global-results?industry_filter=Technology,Finance&employee_range_filter=51-200,201-500&limit=60"
 ```
 
 ### 6. Filtrage combiné (tous les filtres)
 
 ```bash
-curl -X GET "http://localhost:4000/api/pronto/workflow/global-results?company_filter=Google&title_filter=CEO&lead_location_filter=Paris&employee_range_filter=1000&company_location_filter=France&industry_filter=Technology&limit=10"
+curl -X GET "http://69.62.105.91:4000/api/pronto/workflow/global-results?company_filter=Google&title_filter=CEO&lead_location_filter=Paris&employee_range_filter=1000&company_location_filter=France&industry_filter=Technology&limit=10"
 ```
 
 ### 7. Avec détails des recherches
 
 ```bash
-curl -X GET "http://localhost:4000/api/pronto/workflow/global-results?include_search_details=true&limit=200"
+curl -X GET "http://69.62.105.91:4000/api/pronto/workflow/global-results?include_search_details=true&limit=200"
 ```
 
 ### 8. Filtrage complexe par mots-clés
 
 ```bash
-curl -X GET "http://localhost:4000/api/pronto/workflow/global-results?company_filter=tech,software,digital&industry_filter=Technology,Software&limit=500"
+curl -X GET "http://69.62.105.91:4000/api/pronto/workflow/global-results?company_filter=tech,software,digital&industry_filter=Technology,Software&limit=500"
 ```
 
 ## Gestion d'Erreurs

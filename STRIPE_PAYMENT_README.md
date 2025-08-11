@@ -55,7 +55,7 @@ Exécutez le fichier `database/payment_tables.sql` dans votre base de données S
 
 ### Base URL
 ```
-http://localhost:4000/api/payment
+http://69.62.105.91:4000/api/payment
 ```
 
 ## 📦 Packs de Crédits

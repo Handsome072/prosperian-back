@@ -87,13 +87,13 @@ src/
 
 ```bash
 # Statut général de l'API
-curl http://localhost:4000/
+curl http://69.62.105.91:4000/
 
 # Statut des services Pronto
-curl http://localhost:4000/api/pronto/status
+curl http://69.62.105.91:4000/api/pronto/status
 
 # Diagnostic complet Pronto
-curl http://localhost:4000/api/pronto-workflows/diagnostic
+curl http://69.62.105.91:4000/api/pronto-workflows/diagnostic
 ```
 
 ### Logs

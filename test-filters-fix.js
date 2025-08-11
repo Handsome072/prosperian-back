@@ -3,7 +3,7 @@
 
 const axios = require('axios');
 
-const BASE_URL = 'http://localhost:4000';
+const BASE_URL = 'http://69.62.105.91:4000';
 
 async function testFiltersWithPotentialNullValues() {
   console.log('🧪 Test de la correction des filtres avec valeurs null/undefined');

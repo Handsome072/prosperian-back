@@ -237,7 +237,7 @@ console.log(result.filters); // Filtres extraits
 ## Documentation Swagger
 
 La documentation complète de l'API est disponible via Swagger UI à l'adresse :
-`http://localhost:4000/api-docs`
+`http://69.62.105.91:4000/api-docs`
 
 ## Exemples d'utilisation avancée
 

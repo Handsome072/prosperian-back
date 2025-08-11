@@ -119,13 +119,13 @@ POST /api/semantic/search
 ### 2. **Via l'API** :
 ```bash
 # Tester l'analyse
-curl "http://localhost:4000/api/semantic/analyze?term=coiffeur"
+curl "http://69.62.105.91:4000/api/semantic/analyze?term=coiffeur"
 
 # Tester les suggestions
-curl "http://localhost:4000/api/semantic/suggestions?term=rest"
+curl "http://69.62.105.91:4000/api/semantic/suggestions?term=rest"
 
 # Tester les concepts populaires
-curl "http://localhost:4000/api/semantic/popular"
+curl "http://69.62.105.91:4000/api/semantic/popular"
 ```
 
 ### 3. **Exemples de recherche** :

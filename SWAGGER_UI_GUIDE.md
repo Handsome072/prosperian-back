@@ -6,7 +6,7 @@ Ce guide vous explique comment utiliser correctement l'interface Swagger UI pour
 
 ## 🔗 Accès à Swagger UI
 
-**URL :** `http://localhost:4000/api-docs`
+**URL :** `http://69.62.105.91:4000/api-docs`
 
 ## 🚀 Endpoints Disponibles
 
@@ -28,7 +28,7 @@ Ce guide vous explique comment utiliser correctement l'interface Swagger UI pour
 
 ### **Étape 1 : Extraction du SessionId**
 
-1. **Ouvrez Swagger UI** : `http://localhost:4000/api-docs`
+1. **Ouvrez Swagger UI** : `http://69.62.105.91:4000/api-docs`
 
 2. **Trouvez l'endpoint** : `POST /api/linkedin-sales/extract-session`
 
@@ -237,7 +237,7 @@ Si vous rencontrez des problèmes :
 1. **Vérifiez la syntaxe JSON** dans Swagger UI
 2. **Consultez les exemples** fournis
 3. **Testez avec des requêtes simples** d'abord
-4. **Vérifiez que le serveur fonctionne** : `http://localhost:4000`
+4. **Vérifiez que le serveur fonctionne** : `http://69.62.105.91:4000`
 
 ---
 

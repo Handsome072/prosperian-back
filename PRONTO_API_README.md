@@ -227,7 +227,7 @@ Base URL: https://app.prontohq.com/api/v2
 
 ```bash
 curl --request POST \
-  --url http://localhost:4000/api/pronto/lists \
+  --url http://69.62.105.91:4000/api/pronto/lists \
   --header 'Content-Type: application/json' \
   --data '{
     "name": "Ma liste test",

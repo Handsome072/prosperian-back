@@ -18,7 +18,7 @@ async function testSessionIdExtraction() {
 
     // Test 1: Extraire le sessionId
     console.log('1. Extraction du sessionId...');
-    const extractResponse = await axios.post('http://localhost:4000/api/linkedin-sales/extract-session', {
+    const extractResponse = await axios.post('http://69.62.105.91:4000/api/linkedin-sales/extract-session', {
       url: sampleUrl
     });
 
@@ -36,7 +36,7 @@ async function testSessionIdExtraction() {
     console.log('2. Génération d\'une nouvelle URL avec le sessionId...');
     const sessionId = extractResponse.data.sessionId;
     
-    const generateResponse = await axios.post('http://localhost:4000/api/linkedin-sales/generate-url-with-session', {
+    const generateResponse = await axios.post('http://69.62.105.91:4000/api/linkedin-sales/generate-url-with-session', {
       searchType: 'people',
       keywords: 'développeur',
       filters: [
@@ -98,7 +98,7 @@ async function testSessionIdValidation() {
     for (const testCase of testCases) {
       console.log(`📝 Test: ${testCase.name}`);
       
-      const response = await axios.post('http://localhost:4000/api/linkedin-sales/generate-url-with-session', {
+      const response = await axios.post('http://69.62.105.91:4000/api/linkedin-sales/generate-url-with-session', {
         searchType: 'people',
         keywords: 'test',
         sessionId: testCase.sessionId

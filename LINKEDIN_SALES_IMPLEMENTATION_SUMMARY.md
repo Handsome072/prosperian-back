@@ -91,11 +91,11 @@ https://www.linkedin.com/sales/search/company?query=(spellCorrectionEnabled:true
 
 ### Serveur
 - **Port**: 4000
-- **Base URL**: `http://localhost:4000`
-- **API Base**: `http://localhost:4000/api/linkedin-sales`
+- **Base URL**: `http://69.62.105.91:4000`
+- **API Base**: `http://69.62.105.91:4000/api/linkedin-sales`
 
 ### Documentation Swagger
-- **URL**: `http://localhost:4000/api-docs`
+- **URL**: `http://69.62.105.91:4000/api-docs`
 - **Tag**: "LinkedIn Sales Navigator"
 - **Schémas**: Définis avec JSDoc dans le code
 

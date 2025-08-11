@@ -70,7 +70,7 @@ https://www.linkedin.com/sales/search/people?query=(spellCorrectionEnabled:true,
 ### **Étape 2 : Extraire le SessionId**
 
 ```bash
-curl -X POST 'http://localhost:4000/api/linkedin-sales/extract-session' \
+curl -X POST 'http://69.62.105.91:4000/api/linkedin-sales/extract-session' \
   -H 'Content-Type: application/json' \
   -d '{
     "url": "https://www.linkedin.com/sales/search/people?query=...&sessionId=oyT4SvXfQXWQEbOH54crEQ%3D%3D"
@@ -90,7 +90,7 @@ curl -X POST 'http://localhost:4000/api/linkedin-sales/extract-session' \
 ### **Étape 3 : Générer des URLs avec SessionId**
 
 ```bash
-curl -X POST 'http://localhost:4000/api/linkedin-sales/generate-url-with-session' \
+curl -X POST 'http://69.62.105.91:4000/api/linkedin-sales/generate-url-with-session' \
   -H 'Content-Type: application/json' \
   -d '{
     "searchType": "people",
@@ -170,7 +170,7 @@ oyT4SvXfQXWQEbOH54crEQ==
 7. **POST** `/api/linkedin-sales/generate-url-with-session` - **NOUVEAU** : Génération avec sessionId
 
 ### **Documentation Swagger**
-- **URL** : `http://localhost:4000/api-docs`
+- **URL** : `http://69.62.105.91:4000/api-docs`
 - **Section** : "LinkedIn Sales Navigator"
 - **Format** : OpenAPI 3.0.0
 
@@ -218,8 +218,8 @@ oyT4SvXfQXWQEbOH54crEQ==
 
 ### **Documentation Locale**
 - **Guide complet** : `LINKEDIN_SESSIONID_GUIDE.md`
-- **API Swagger** : `http://localhost:4000/api-docs`
-- **Interface HTML** : `http://localhost:4000/api/linkedin-sales`
+- **API Swagger** : `http://69.62.105.91:4000/api-docs`
+- **Interface HTML** : `http://69.62.105.91:4000/api/linkedin-sales`
 
 ### **Scripts de Test**
 - **Test complet** : `test-session-id.js`

@@ -40,7 +40,7 @@ SUPABASE_KEY=votre-cle-supabase
 
 ### Base URL
 ```
-http://localhost:4000/api/auth
+http://69.62.105.91:4000/api/auth
 ```
 
 ### 1. Inscription (Register)
@@ -165,7 +165,7 @@ Authorization: Bearer <jwt-token>
 
 ### Base URL
 ```
-http://localhost:4000/api/utilisateur
+http://69.62.105.91:4000/api/utilisateur
 ```
 
 ### 1. Profil Personnel
@@ -309,7 +309,7 @@ router.put('/resource/:id', authenticateToken, authorizeOwner('user_id'), (req, 
 ```javascript
 // Inscription
 const registerUser = async (userData) => {
-  const response = await fetch('http://localhost:4000/api/auth/register', {
+  const response = await fetch('http://69.62.105.91:4000/api/auth/register', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -321,7 +321,7 @@ const registerUser = async (userData) => {
 
 // Connexion
 const loginUser = async (credentials) => {
-  const response = await fetch('http://localhost:4000/api/auth/login', {
+  const response = await fetch('http://69.62.105.91:4000/api/auth/login', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -333,7 +333,7 @@ const loginUser = async (credentials) => {
 
 // Requête protégée
 const getProfile = async (token) => {
-  const response = await fetch('http://localhost:4000/api/utilisateur/profile', {
+  const response = await fetch('http://69.62.105.91:4000/api/utilisateur/profile', {
     headers: {
       'Authorization': `Bearer ${token}`
     }
@@ -349,7 +349,7 @@ import axios from 'axios';
 
 // Configuration avec token
 const api = axios.create({
-  baseURL: 'http://localhost:4000/api'
+  baseURL: 'http://69.62.105.91:4000/api'
 });
 
 // Intercepteur pour ajouter le token
@@ -401,7 +401,7 @@ const auth = {
 ### Test d'Inscription
 
 ```bash
-curl -X POST http://localhost:4000/api/auth/register \
+curl -X POST http://69.62.105.91:4000/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "email": "test@example.com",
@@ -414,7 +414,7 @@ curl -X POST http://localhost:4000/api/auth/register \
 ### Test de Connexion
 
 ```bash
-curl -X POST http://localhost:4000/api/auth/login \
+curl -X POST http://69.62.105.91:4000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "test@example.com",
@@ -425,7 +425,7 @@ curl -X POST http://localhost:4000/api/auth/login \
 ### Test de Route Protégée
 
 ```bash
-curl -X GET http://localhost:4000/api/utilisateur/profile \
+curl -X GET http://69.62.105.91:4000/api/utilisateur/profile \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
