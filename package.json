@@ -6,7 +6,15 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "deploy": "./deploy.sh",
+    "setup-deployment": "./setup-deployment.sh",
+    "webhook:install": "cd deployment && npm install",
+    "webhook:start": "pm2 start deployment/webhook-server.js --name webhook-backend",
+    "webhook:stop": "pm2 stop webhook-backend",
+    "webhook:restart": "pm2 restart webhook-backend",
+    "webhook:logs": "pm2 logs webhook-backend",
+    "webhook:status": "pm2 status webhook-backend"
   },
   "keywords": [],
   "author": "",

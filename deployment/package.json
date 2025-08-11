@@ -1,0 +1,23 @@
+{
+  "name": "prosperian-webhook-deployment",
+  "version": "1.0.0",
+  "description": "Webhook server pour le déploiement automatique du backend Prosperian",
+  "main": "webhook-server.js",
+  "scripts": {
+    "start": "node webhook-server.js",
+    "dev": "nodemon webhook-server.js",
+    "setup": "npm install && pm2 start webhook-server.js --name webhook-backend",
+    "stop": "pm2 stop webhook-backend",
+    "restart": "pm2 restart webhook-backend",
+    "logs": "pm2 logs webhook-backend"
+  },
+  "keywords": ["webhook", "deployment", "prosperian", "backend", "github"],
+  "author": "Prosperian Team",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
